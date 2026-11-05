@@ -13,7 +13,7 @@ export const TEST_UPI = { success: "success@testupi", failure: "failure@testupi"
 
 // ASSUMPTION: the gateway tells us the card's issuing country from its BIN.
 // We simulate that with a small list of test BINs issued outside India.
-const FOREIGN_TEST_BINS = ["400056", "555555", "378282"];
+const FOREIGN_TEST_BINS = ["400005", "555555", "378282"];
 
 function luhn(num: string): boolean {
   let sum = 0;
