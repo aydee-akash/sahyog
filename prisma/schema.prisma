@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  DONOR
+  ADMIN
+}
+
+enum SchemeStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+}
+
+enum DonationStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum Frequency {
+  ONE_TIME
+  MONTHLY
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String
+  passwordHash String
+  role         Role       @default(DONOR)
+  donations    Donation[]
+  createdAt    DateTime   @default(now())
+}
+
+model Scheme {
+  id           String       @id @default(cuid())
+  code         String       @unique
+  need         String // PENSION | LIVELIHOOD | HEALTH | EDUCATION | HOUSING
+  districts    String[] // empty = all districts
+  titleHi      String
+  titleEn      String
+  summaryHi    String       @default("")
+  benefitHi    String       @default("")
+  eligibilityHi String      @default("")
+  documentsHi  String[]
+  howToApplyHi String       @default("")
+  sourceUrl    String
+  noticeText   String
+  rules        Json // see src/lib/eligibility.ts
+  lastChecked  DateTime
+  status       SchemeStatus @default(DRAFT)
+  aiDrafted    Boolean      @default(false)
+  reviewedBy   String?
+  updatedAt    DateTime     @updatedAt
+}
+
+model HelpCentre {
+  id       String @id @default(cuid())
+  district String
+  name     String
+  phone    String
+  address  String
+}
+
+model Campaign {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  titleHi     String
+  titleEn     String
+  blurbHi     String
+  goal        Int
+  active      Boolean    @default(true)
+  donations   Donation[]
+}
+
+model Donation {
+  id             String         @id @default(cuid())
+  idempotencyKey String         @unique
+  userId         String?
+  user           User?          @relation(fields: [userId], references: [id])
+  campaignId     String
+  campaign       Campaign       @relation(fields: [campaignId], references: [id])
+  amount         Int // whole rupees
+  donorName      String
+  donorEmail     String
+  donorPan       String
+  donorAddress   String
+  frequency      Frequency      @default(ONE_TIME)
+  status         DonationStatus @default(PENDING)
+  paymentRef     String?
+  failureReason  String?
+  receipt        Receipt?
+  createdAt      DateTime       @default(now())
+
+  @@index([campaignId, status])
+}
+
+model ReceiptCounter {
+  fy     String @id // e.g. "2026-27"
+  lastNo Int    @default(0)
+}
+
+model Receipt {
+  id         String   @id @default(cuid())
+  number     String   @unique
+  fy         String
+  seq        Int
+  donationId String   @unique
+  donation   Donation @relation(fields: [donationId], references: [id])
+  issuedAt   DateTime @default(now())
+
+  @@unique([fy, seq])
+}
+
+model CallbackRequest {
+  id          String   @id @default(cuid())
+  phone       String
+  district    String
+  schemeCodes String[]
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     String
+  action    String
+  entity    String
+  entityId  String
+  detail    String   @default("")
+  createdAt DateTime @default(now())
+}
