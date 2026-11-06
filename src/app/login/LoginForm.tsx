@@ -1,0 +1,23 @@
+"use client";
+
+import { useActionState } from "react";
+import { login, LoginState } from "@/app/actions/auth";
+
+export function LoginForm({ next }: { next?: string }) {
+  const [state, action, pending] = useActionState<LoginState, FormData>(login, {});
+  return (
+    <form action={action} className="card grid gap-4 p-5">
+      <input type="hidden" name="next" value={next ?? ""} />
+      <div>
+        <label htmlFor="email" className="label">ईमेल</label>
+        <input id="email" name="email" type="email" autoComplete="email" required className="input" />
+      </div>
+      <div>
+        <label htmlFor="password" className="label">पासवर्ड</label>
+        <input id="password" name="password" type="password" autoComplete="current-password" required className="input" />
+      </div>
+      {state.error && <p role="alert" className="text-bad">{state.error}</p>}
+      <button disabled={pending} className="btn-primary">{pending ? "लॉग इन हो रहा है…" : "लॉग इन"}</button>
+    </form>
+  );
+}
