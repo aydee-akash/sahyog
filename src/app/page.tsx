@@ -1,103 +1,143 @@
-import Image from "next/image";
+import Link from "next/link";
+import { prisma } from "@/lib/db";
+import { DISTRICTS, NEEDS, districtHi } from "@/lib/content";
+import { SchemeCard } from "@/components/SchemeCard";
+import { ArrowIcon, NeedIcon } from "@/components/icons";
+import { formatINR } from "@/lib/money";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+type Search = Promise<{ need?: string; district?: string }>;
+
+export default async function Home({ searchParams }: { searchParams: Search }) {
+  const { need, district } = await searchParams;
+  const validNeed = NEEDS.some((n) => n.key === need) ? need : undefined;
+  const validDistrict = DISTRICTS.some((d) => d.key === district) ? district : undefined;
+
+  const [schemes, campaigns] = await Promise.all([
+    prisma.scheme.findMany({
+      where: {
+        status: "PUBLISHED",
+        ...(validNeed ? { need: validNeed } : {}),
+        ...(validDistrict ? { OR: [{ districts: { isEmpty: true } }, { districts: { has: validDistrict } }] } : {}),
+      },
+      orderBy: { code: "asc" },
+      select: { code: true, titleHi: true, benefitHi: true, need: true, summaryHi: true },
+    }),
+    prisma.campaign.findMany({ where: { active: true }, orderBy: { slug: "asc" } }),
+  ]);
+  const raised = await prisma.donation.groupBy({ by: ["campaignId"], where: { status: "PAID" }, _sum: { amount: true } });
+  const raisedBy = Object.fromEntries(raised.map((r) => [r.campaignId, r._sum.amount ?? 0]));
+
+  const link = (n?: string) => {
+    const p = new URLSearchParams();
+    if (n) p.set("need", n);
+    if (validDistrict) p.set("district", validDistrict);
+    const q = p.toString();
+    return q ? `/?${q}#schemes` : "/#schemes";
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="grid gap-12">
+      <section className="grid gap-5 pt-2">
+        <h1 className="text-[2rem] font-bold leading-tight sm:text-[2.4rem]">
+          आपके लिए सरकारी योजनाएँ,
+          <br />
+          <span className="text-accent">आसान हिंदी में</span>
+        </h1>
+        <p className="max-w-xl text-lg text-muted">
+          पेंशन, लोन, मातृत्व सहायता और बहुत कुछ। देखें कि कौन सी योजना आपके काम की है और आवेदन कैसे करें।
+        </p>
+        <Link href="/finder" className="card flex items-center justify-between gap-4 border-accent/40 bg-accent-soft p-5 hover:border-accent">
+          <span>
+            <span className="block text-xl font-bold text-accent-strong">मेरे लिए कौन सी योजना है?</span>
+            <span className="text-muted">6 आसान सवालों के जवाब दें · 1 मिनट</span>
+          </span>
+          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-white">
+            <ArrowIcon />
+          </span>
+        </Link>
+      </section>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <section id="schemes" aria-labelledby="schemes-h" className="grid gap-5 scroll-mt-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 id="schemes-h" className="text-2xl font-bold">
+            ज़रूरत के हिसाब से देखें
+          </h2>
+          <form className="flex items-center gap-2" action="/#schemes">
+            {validNeed && <input type="hidden" name="need" value={validNeed} />}
+            <label htmlFor="district" className="text-[0.95rem] text-muted">ज़िला</label>
+            <select id="district" name="district" defaultValue={validDistrict ?? ""} className="input min-h-11 w-auto py-1">
+              <option value="">सभी ज़िले</option>
+              {DISTRICTS.map((d) => (
+                <option key={d.key} value={d.key}>{d.hi}</option>
+              ))}
+            </select>
+            <button className="btn-secondary min-h-11 px-4">देखें</button>
+          </form>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <div className="flex flex-wrap gap-2" role="list" aria-label="ज़रूरत">
+          <Link role="listitem" href={link()} className={`chip ${!validNeed ? "chip-on" : ""}`} aria-current={!validNeed ? "true" : undefined}>
+            सभी
+          </Link>
+          {NEEDS.map((n) => (
+            <Link
+              role="listitem"
+              key={n.key}
+              href={link(n.key)}
+              className={`chip ${validNeed === n.key ? "chip-on" : ""}`}
+              aria-current={validNeed === n.key ? "true" : undefined}
+            >
+              <NeedIcon need={n.key} className="size-5" />
+              {n.hi}
+            </Link>
+          ))}
+        </div>
+
+        {schemes.length === 0 ? (
+          <div className="card grid justify-items-start gap-3 p-6">
+            <p className="text-lg font-semibold">
+              {validDistrict ? `${districtHi(validDistrict)} में इस ज़रूरत की कोई योजना अभी हमारी सूची में नहीं है।` : "इस ज़रूरत की कोई योजना अभी सूची में नहीं है।"}
+            </p>
+            <p className="text-muted">दूसरी ज़रूरत चुनें या हेल्पलाइन पर पूछें। हम नई योजनाएँ जोड़ते रहते हैं।</p>
+            <Link href="/#schemes" className="btn-secondary">सभी योजनाएँ देखें</Link>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {schemes.map((s) => (
+              <SchemeCard key={s.code} {...s} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section aria-labelledby="give-h" className="grid gap-5 border-t border-line pt-10">
+        <div>
+          <h2 id="give-h" className="text-2xl font-bold">ट्रस्ट के काम में साथ दें</h2>
+          <p className="text-muted">दान पर तुरंत रसीद और 80G प्रमाण पत्र। हर महीने दान भी कर सकते हैं।</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {campaigns.map((c) => {
+            const pct = Math.min(100, Math.round(((raisedBy[c.id] ?? 0) / c.goal) * 100));
+            return (
+              <Link key={c.id} href={`/donate/${c.slug}`} className="card grid gap-3 p-5 hover:border-accent">
+                <h3 className="text-xl font-bold">{c.titleHi}</h3>
+                <p className="text-muted">{c.blurbHi}</p>
+                <div>
+                  <div className="h-2 overflow-hidden rounded-full bg-accent-soft" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="लक्ष्य की प्रगति">
+                    <div className="h-full rounded-full bg-accent" style={{ width: `${Math.max(pct, 2)}%` }} />
+                  </div>
+                  <p className="mt-1 text-[0.9rem] text-muted">
+                    {formatINR(raisedBy[c.id] ?? 0)} जुटे · लक्ष्य {formatINR(c.goal)}
+                  </p>
+                </div>
+                <span className="btn-primary justify-self-start">दान करें</span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }
