@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useId, useState, useTransition } from "react";
+import { useId, useState } from "react";
+import { useBusy } from "@/components/useBusy";
 import type { SchemeStatus } from "@prisma/client";
 import { generateDraft, saveScheme, transitionScheme } from "@/app/actions/admin";
 import { DISTRICTS, NEEDS, STATUS_HI } from "@/lib/content";
@@ -42,7 +42,6 @@ const MARITAL = [
 ] as const;
 
 export function Editor({ scheme, log }: Props) {
-  const router = useRouter();
   const [c, setC] = useState<Content>(scheme.content);
   const [docsText, setDocsText] = useState(scheme.content.documentsHi.join("\n"));
   const [docsEnText, setDocsEnText] = useState(scheme.content.documentsEn.join("\n"));
@@ -50,8 +49,8 @@ export function Editor({ scheme, log }: Props) {
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err" | "warn"; text: string } | null>(null);
   const [notFound, setNotFound] = useState<string[]>([]);
-  const [aiPending, startAi] = useTransition();
-  const [pending, start] = useTransition();
+  const [aiPending, startAi] = useBusy();
+  const [pending, start] = useBusy();
   const status = scheme.status;
 
   const set = <K extends keyof Content>(k: K, v: Content[K]) => {
@@ -101,7 +100,6 @@ export function Editor({ scheme, log }: Props) {
       if (!res.ok) return setMsg({ kind: "err", text: res.error });
       setDirty(false);
       setMsg({ kind: "ok", text: "सेव हो गया (ड्राफ़्ट)।" });
-      router.refresh();
     });
   }
 
@@ -110,7 +108,6 @@ export function Editor({ scheme, log }: Props) {
       const res = await transitionScheme(scheme.id, to);
       if (!res.ok) return setMsg({ kind: "err", text: res.error });
       setMsg({ kind: "ok", text: `स्थिति: ${STATUS_HI[to]}` });
-      router.refresh();
     });
   }
 

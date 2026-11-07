@@ -1,18 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { useBusy } from "@/components/useBusy";
 import { Play } from "lucide-react";
 import { runMonthlyCharges } from "@/app/actions/admin";
 
 export function RunMonthly({ due }: { due: number }) {
   const [result, setResult] = useState<{ mandates: number; receipts: string[] } | null>(null);
   const [error, setError] = useState("");
-  const [pending, start] = useTransition();
+  const [pending, run] = useBusy();
   return (
     <div className="grid gap-3">
       <button
         onClick={() =>
-          start(async () => {
+          run(async () => {
             setError("");
             try {
               setResult(await runMonthlyCharges());

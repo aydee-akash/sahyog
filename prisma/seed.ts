@@ -355,7 +355,7 @@ async function main() {
   // A campaign push over the last two weeks, so the dashboard chart has shape.
   for (let i = 0; i < 30; i++) {
     const campaign = i % 4 === 0 ? livelihood : health;
-    const when = new Date(Date.now() - ((i * 7) % 14) * 86_400_000 - (i % 5) * 3_600_000);
+    const when = new Date(Date.now() - ((i * 5) % 14) * 86_400_000 - (i % 5) * 3_600_000);
     const d = await prisma.donation.create({
       data: {
         idempotencyKey: randomUUID(),

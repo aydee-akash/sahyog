@@ -23,7 +23,7 @@ export function AdminSidebar({ counts }: { counts: { callbacks: number; review: 
           const badge = href === "/admin/callbacks" ? counts.callbacks : href === "/admin/schemes" ? counts.review : 0;
           return (
             <li key={href}>
-              <Link
+              <Link prefetch={false}
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-11 items-center gap-2.5 whitespace-nowrap rounded-xl px-3 py-2 text-[0.95rem] ${active ? "bg-accent-soft font-semibold text-accent-strong" : "text-ink hover:bg-card"}`}

@@ -23,7 +23,7 @@ export default async function AdminSchemes() {
           <h1 className="text-[1.75rem] font-bold">योजनाएँ</h1>
           <p className="text-muted">केवल &ldquo;प्रकाशित&rdquo; योजनाएँ होम पेज पर दिखती हैं। हर बदलाव समीक्षा के बाद ही प्रकाशित होता है।</p>
         </div>
-        <Link href="/admin/schemes/new" className="btn-primary">+ नई योजना</Link>
+        <Link prefetch={false} href="/admin/schemes/new" className="btn-primary">+ नई योजना</Link>
       </div>
 
       <div className="card overflow-x-auto">
@@ -42,7 +42,7 @@ export default async function AdminSchemes() {
               <tr key={s.id} className="hover:bg-paper">
                 <td className="p-3 text-[0.9rem] text-muted">{s.code}</td>
                 <td className="p-3">
-                  <Link href={`/admin/schemes/${s.id}`} className="font-semibold text-accent hover:underline">{s.titleHi}</Link>
+                  <Link prefetch={false} href={`/admin/schemes/${s.id}`} className="font-semibold text-accent hover:underline">{s.titleHi}</Link>
                   <span className="block text-[0.85rem] text-muted">{s.titleEn}</span>
                 </td>
                 <td className="p-3">{needHi(s.need)}</td>

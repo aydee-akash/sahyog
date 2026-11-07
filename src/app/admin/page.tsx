@@ -64,7 +64,7 @@ export default async function Dashboard() {
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
         {kpis.map(({ label, value, sub, Icon, href }) => (
-          <Link key={label} href={href} className="card grid gap-1 p-4 transition-colors hover:border-accent">
+          <Link prefetch={false} key={label} href={href} className="card grid gap-1 p-4 transition-colors hover:border-accent">
             <span className="flex items-center gap-2 text-[0.9rem] text-muted"><Icon className="size-4 text-accent" aria-hidden /> {label}</span>
             <span className="text-2xl font-bold">{value}</span>
             <span className="text-[0.85rem] text-muted">{sub}</span>

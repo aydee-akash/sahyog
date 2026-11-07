@@ -68,6 +68,7 @@ export async function saveScheme(id: string, input: unknown): Promise<SaveResult
     data: { ...parsed.data, status: "DRAFT", reviewedBy: null },
   });
   await audit(admin.email, existing.status === "PUBLISHED" ? "edit_unpublished" : "save", id);
+  revalidatePath(`/admin/schemes/${id}`);
   revalidatePath("/");
   revalidatePath(`/schemes/${existing.code}`);
   return { ok: true };
@@ -96,6 +97,7 @@ export async function transitionScheme(id: string, to: SchemeStatus): Promise<Sa
     data: { status: to, reviewedBy: to === "PUBLISHED" ? admin.email : null },
   });
   await audit(admin.email, `status:${s.status}->${to}`, id);
+  revalidatePath(`/admin/schemes/${id}`);
   revalidatePath("/");
   revalidatePath(`/schemes/${s.code}`);
   revalidatePath("/admin/schemes");

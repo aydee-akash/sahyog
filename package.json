@@ -10,7 +10,8 @@
     "test": "node --env-file=.env ./node_modules/vitest/vitest.mjs run",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "load-test": "node --env-file=.env ./node_modules/.bin/tsx scripts/load-test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.6.0",

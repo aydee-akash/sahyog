@@ -18,7 +18,7 @@ export default async function EditScheme({ params }: { params: Promise<{ id: str
 
   return (
     <div className="grid gap-6">
-      <Link href="/admin/schemes" className="text-accent">← सभी योजनाएँ</Link>
+      <Link prefetch={false} href="/admin/schemes" className="text-accent">← सभी योजनाएँ</Link>
       <Editor
         scheme={{
           id: s.id,

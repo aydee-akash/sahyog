@@ -19,7 +19,7 @@ export function CampaignForm({ campaign }: { campaign?: C }) {
       <div className="grid gap-3 sm:grid-cols-2">
         {f("titleHi", "नाम (हिंदी)")}
         {f("titleEn", "Name (English)")}
-        {f("slug", "slug (URL)", { pattern: "[a-z0-9-]{3,40}", placeholder: "maa-swasthya" })}
+        {f("slug", "slug (URL)", { pattern: "[a-z0-9\\-]{3,40}", placeholder: "maa-swasthya" })}
         {f("goal", "लक्ष्य (₹)", { inputMode: "numeric", type: "number", min: 10000 })}
       </div>
       <label className="grid gap-1">
