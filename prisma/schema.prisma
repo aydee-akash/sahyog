@@ -24,6 +24,12 @@ enum DonationStatus {
   FAILED
 }
 
+enum MandateStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
 enum Frequency {
   ONE_TIME
   MONTHLY
@@ -40,25 +46,30 @@ model User {
 }
 
 model Scheme {
-  id           String       @id @default(cuid())
-  code         String       @unique
-  need         String // PENSION | LIVELIHOOD | HEALTH | EDUCATION | HOUSING
-  districts    String[] // empty = all districts
-  titleHi      String
-  titleEn      String
-  summaryHi    String       @default("")
-  benefitHi    String       @default("")
-  eligibilityHi String      @default("")
-  documentsHi  String[]
-  howToApplyHi String       @default("")
-  sourceUrl    String
-  noticeText   String
-  rules        Json // see src/lib/eligibility.ts
-  lastChecked  DateTime
-  status       SchemeStatus @default(DRAFT)
-  aiDrafted    Boolean      @default(false)
-  reviewedBy   String?
-  updatedAt    DateTime     @updatedAt
+  id            String       @id @default(cuid())
+  code          String       @unique
+  need          String // PENSION | LIVELIHOOD | HEALTH | EDUCATION | HOUSING
+  districts     String[] // empty = all districts
+  titleHi       String
+  titleEn       String
+  summaryHi     String       @default("")
+  benefitHi     String       @default("")
+  eligibilityHi String       @default("")
+  documentsHi   String[]
+  howToApplyHi  String       @default("")
+  summaryEn     String       @default("")
+  benefitEn     String       @default("")
+  eligibilityEn String       @default("")
+  documentsEn   String[]
+  howToApplyEn  String       @default("")
+  sourceUrl     String
+  noticeText    String
+  rules         Json // see src/lib/eligibility.ts
+  lastChecked   DateTime
+  status        SchemeStatus @default(DRAFT)
+  aiDrafted     Boolean      @default(false)
+  reviewedBy    String?
+  updatedAt     DateTime     @updatedAt
 }
 
 model HelpCentre {
@@ -70,14 +81,15 @@ model HelpCentre {
 }
 
 model Campaign {
-  id          String     @id @default(cuid())
-  slug        String     @unique
-  titleHi     String
-  titleEn     String
-  blurbHi     String
-  goal        Int
-  active      Boolean    @default(true)
-  donations   Donation[]
+  id        String     @id @default(cuid())
+  slug      String     @unique
+  titleHi   String
+  titleEn   String
+  blurbHi   String
+  blurbEn   String     @default("")
+  goal      Int
+  active    Boolean    @default(true)
+  donations Donation[]
 }
 
 model Donation {
@@ -93,6 +105,11 @@ model Donation {
   donorPan       String
   donorAddress   String
   frequency      Frequency      @default(ONE_TIME)
+  mandateStatus  MandateStatus?
+  nextChargeAt   DateTime?
+  parentId       String?
+  parent         Donation?      @relation("Instalments", fields: [parentId], references: [id])
+  instalments    Donation[]     @relation("Instalments")
   status         DonationStatus @default(PENDING)
   paymentRef     String?
   failureReason  String?
@@ -100,6 +117,7 @@ model Donation {
   createdAt      DateTime       @default(now())
 
   @@index([campaignId, status])
+  @@index([donorEmail])
 }
 
 model ReceiptCounter {
@@ -108,23 +126,30 @@ model ReceiptCounter {
 }
 
 model Receipt {
-  id         String   @id @default(cuid())
-  number     String   @unique
-  fy         String
-  seq        Int
-  donationId String   @unique
-  donation   Donation @relation(fields: [donationId], references: [id])
-  issuedAt   DateTime @default(now())
+  id           String    @id @default(cuid())
+  number       String    @unique
+  fy           String
+  seq          Int
+  donationId   String    @unique
+  donation     Donation  @relation(fields: [donationId], references: [id])
+  issuedAt     DateTime  @default(now())
+  cancelledAt  DateTime?
+  cancelReason String?
+  cancelledBy  String?
 
   @@unique([fy, seq])
 }
 
 model CallbackRequest {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   phone       String
   district    String
   schemeCodes String[]
-  createdAt   DateTime @default(now())
+  note        String    @default("")
+  handled     Boolean   @default(false)
+  handledBy   String?
+  handledAt   DateTime?
+  createdAt   DateTime  @default(now())
 }
 
 model AuditLog {
@@ -135,4 +160,49 @@ model AuditLog {
   entityId  String
   detail    String   @default("")
   createdAt DateTime @default(now())
+}
+
+// Mock email/SMS outbox: every message the system would send lands here.
+model Outbox {
+  id        String   @id @default(cuid())
+  channel   String   @default("EMAIL")
+  dedupeKey String?  @unique
+  to        String
+  subject   String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  key       String // lower-cased email
+  ok        Boolean
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
+
+model OtpCode {
+  id           String   @id @default(cuid())
+  email        String
+  codeHash     String
+  name         String
+  passwordHash String
+  attempts     Int      @default(0)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([email])
+}
+
+// Anonymous finder usage counter (no answers stored), for the 50,000-uses goal.
+model FinderUse {
+  id        String   @id @default(cuid())
+  via       String // QUESTIONS | AI_TEXT | VOICE
+  matches   Int
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

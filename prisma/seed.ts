@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { confirmPayment } from "../src/lib/receipts";
+import { addMonth } from "../src/lib/dates";
 
 const prisma = new PrismaClient();
 const src = (code: string) => `https://notices.example.org/mp/${code.toLowerCase()}`;
@@ -21,6 +22,11 @@ const schemes = [
     eligibilityHi: "विधवा महिला, उम्र 18 से 79 वर्ष, BPL राशन कार्ड हो।",
     documentsHi: ["पति का मृत्यु प्रमाण पत्र", "BPL राशन कार्ड", "आधार कार्ड", "बैंक पासबुक", "उम्र का प्रमाण"],
     howToApplyHi: "ग्राम पंचायत या वार्ड कार्यालय में फ़ॉर्म भरें। सत्यापन के बाद पैसा सीधे बैंक खाते में आता है।",
+    summaryEn: "Widows with a BPL card can get a monthly pension.",
+    benefitEn: "₹600 a month",
+    eligibilityEn: "Widow aged 18 to 79 with a BPL ration card.",
+    documentsEn: ["Husband's death certificate", "BPL ration card", "Aadhaar card", "Bank passbook", "Age proof"],
+    howToApplyEn: "Fill the form at the gram panchayat or ward office. After verification the money comes straight to your bank account.",
     rules: { minAge: 18, maxAge: 79, marital: ["WIDOW"], bpl: true },
     lastChecked: "2026-09-12",
     status: "PUBLISHED",
@@ -38,6 +44,11 @@ const schemes = [
     eligibilityHi: "पंजीकृत स्वयं सहायता समूह की सदस्य।",
     documentsHi: ["SHG पंजीकरण प्रमाण", "समूह का बैंक खाता विवरण", "आधार कार्ड", "समूह की बैठक का प्रस्ताव"],
     howToApplyHi: "अपने समूह के साथ ब्लॉक कार्यालय या बैंक शाखा जाएँ। समूह का प्रस्ताव और खाता विवरण साथ रखें।",
+    summaryEn: "Women in a registered self-help group (SHG) can take a low-interest loan to start or grow work.",
+    benefitEn: "Loan up to ₹3 lakh at lower interest",
+    eligibilityEn: "Member of a registered self-help group.",
+    documentsEn: ["SHG registration certificate", "Group bank account details", "Aadhaar card", "Group meeting resolution"],
+    howToApplyEn: "Go with your group to the block office or bank branch. Take the group resolution and account details.",
     rules: { shg: true },
     lastChecked: "2026-08-30",
     status: "PUBLISHED",
@@ -55,6 +66,11 @@ const schemes = [
     eligibilityHi: "गर्भवती महिला, पहला बच्चा।",
     documentsHi: ["MCP कार्ड (ममता कार्ड)", "आधार कार्ड", "बैंक पासबुक"],
     howToApplyHi: "आंगनवाड़ी कार्यकर्ता या ANM के पास गर्भावस्था का पंजीकरण कराएँ। वही फ़ॉर्म भरने में मदद करेंगी।",
+    summaryEn: "A pregnant woman expecting her first child may get money in instalments for nutrition and rest.",
+    benefitEn: "₹5,000 in instalments",
+    eligibilityEn: "Pregnant woman, first child.",
+    documentsEn: ["MCP card (Mamta card)", "Aadhaar card", "Bank passbook"],
+    howToApplyEn: "Register the pregnancy with the anganwadi worker or ANM. They will help fill the form.",
     rules: { pregnancy: ["FIRST"] },
     lastChecked: "2026-10-05",
     status: "PUBLISHED",
@@ -72,6 +88,11 @@ const schemes = [
     eligibilityHi: "उम्र 60 वर्ष या अधिक, BPL राशन कार्ड हो।",
     documentsHi: ["उम्र का प्रमाण", "BPL राशन कार्ड", "आधार कार्ड", "बैंक पासबुक"],
     howToApplyHi: "ग्राम पंचायत या वार्ड कार्यालय में आवेदन दें।",
+    summaryEn: "Women aged 60 or above from BPL families may get a monthly pension.",
+    benefitEn: "₹600 a month",
+    eligibilityEn: "Aged 60 or above, with a BPL ration card.",
+    documentsEn: ["Age proof", "BPL ration card", "Aadhaar card", "Bank passbook"],
+    howToApplyEn: "Apply at the gram panchayat or ward office.",
     rules: { minAge: 60, bpl: true },
     lastChecked: "2026-09-20",
     status: "PUBLISHED",
@@ -89,6 +110,11 @@ const schemes = [
     eligibilityHi: "तलाकशुदा या परित्यक्ता महिला, उम्र 18 से 59 वर्ष, BPL कार्ड हो।",
     documentsHi: ["तलाक या परित्याग का प्रमाण / शपथ पत्र", "BPL राशन कार्ड", "आधार कार्ड", "बैंक पासबुक"],
     howToApplyHi: "ग्राम पंचायत या वार्ड कार्यालय में आवेदन दें।",
+    summaryEn: "Divorced or abandoned women with a BPL card can apply for a monthly pension.",
+    benefitEn: "₹600 a month",
+    eligibilityEn: "Divorced or abandoned woman aged 18 to 59 with a BPL card.",
+    documentsEn: ["Proof of divorce / affidavit of abandonment", "BPL ration card", "Aadhaar card", "Bank passbook"],
+    howToApplyEn: "Apply at the gram panchayat or ward office.",
     rules: { minAge: 18, maxAge: 59, marital: ["SEPARATED"], bpl: true },
     lastChecked: "2026-09-20",
     status: "PUBLISHED",
@@ -106,6 +132,11 @@ const schemes = [
     eligibilityHi: "18 वर्ष से अधिक उम्र की महिला, BPL परिवार।",
     documentsHi: ["आधार कार्ड", "BPL राशन कार्ड", "बैंक पासबुक", "पासपोर्ट साइज़ फ़ोटो"],
     howToApplyHi: "नज़दीकी गैस एजेंसी पर फ़ॉर्म भरें।",
+    summaryEn: "An adult woman from a BPL family may get a free cooking-gas connection in her name.",
+    benefitEn: "Free gas connection and first cylinder",
+    eligibilityEn: "Woman over 18 from a BPL family.",
+    documentsEn: ["Aadhaar card", "BPL ration card", "Bank passbook", "Passport-size photo"],
+    howToApplyEn: "Fill the form at the nearest gas agency.",
     rules: { minAge: 18, bpl: true },
     lastChecked: "2026-07-18",
     status: "PUBLISHED",
@@ -123,6 +154,11 @@ const schemes = [
     eligibilityHi: "उम्र 18 से 45 वर्ष। केवल भोपाल, सीहोर, विदिशा, देवास ज़िलों में।",
     documentsHi: ["आधार कार्ड", "बैंक पासबुक", "फ़ोटो"],
     howToApplyHi: "ज़िला कौशल केंद्र या ट्रस्ट के सहायता केंद्र पर नाम लिखवाएँ।",
+    summaryEn: "Women aged 18 to 45 may get 3 months of free training and a certificate.",
+    benefitEn: "3 months free training, ₹1,500 monthly stipend",
+    eligibilityEn: "Aged 18 to 45. Only in Bhopal, Sehore, Vidisha and Dewas districts.",
+    documentsEn: ["Aadhaar card", "Bank passbook", "Photo"],
+    howToApplyEn: "Enrol at the district skill centre or the trust's help centre.",
     rules: { minAge: 18, maxAge: 45 },
     lastChecked: "2026-10-01",
     status: "PUBLISHED",
@@ -140,6 +176,11 @@ const schemes = [
     eligibilityHi: "",
     documentsHi: [],
     howToApplyHi: "",
+    summaryEn: "",
+    benefitEn: "",
+    eligibilityEn: "",
+    documentsEn: [],
+    howToApplyEn: "",
     rules: { pregnancy: ["LATER"] },
     lastChecked: "2026-10-05",
     status: "DRAFT",
@@ -157,6 +198,11 @@ const schemes = [
     eligibilityHi: "उम्र 18 से 55 वर्ष, कम से कम 5वीं पास।",
     documentsHi: ["आधार कार्ड", "व्यापार योजना", "बैंक पासबुक", "शिक्षा प्रमाण पत्र"],
     howToApplyHi: "ज़िला उद्योग केंद्र में ऑनलाइन या सीधे आवेदन दें।",
+    summaryEn: "Women aged 18 to 55 starting a small business may get interest relief on a bank loan.",
+    benefitEn: "Interest relief on loans up to ₹10 lakh",
+    eligibilityEn: "Aged 18 to 55, studied at least up to class 5.",
+    documentsEn: ["Aadhaar card", "Business plan", "Bank passbook", "Education certificate"],
+    howToApplyEn: "Apply online or in person at the District Industries Centre.",
     rules: { minAge: 18, maxAge: 55 },
     lastChecked: "2026-08-14",
     status: "IN_REVIEW",
@@ -181,7 +227,12 @@ const helpCentres: [string, string, string][] = [
 async function main() {
   await prisma.$transaction([
     prisma.receipt.deleteMany(),
+    prisma.donation.updateMany({ data: { parentId: null } }),
     prisma.donation.deleteMany(),
+    prisma.outbox.deleteMany(),
+    prisma.loginAttempt.deleteMany(),
+    prisma.otpCode.deleteMany(),
+    prisma.finderUse.deleteMany(),
     prisma.receiptCounter.deleteMany(),
     prisma.campaign.deleteMany(),
     prisma.scheme.deleteMany(),
@@ -190,6 +241,9 @@ async function main() {
     prisma.auditLog.deleteMany(),
     prisma.user.deleteMany(),
   ]);
+
+  // Receipts are issued at the end in payment-date order, like real life.
+  const toConfirm: { id: string; when: Date; after?: (number: string) => Promise<void> }[] = [];
 
   const passwordHash = await bcrypt.hash("Demo@1234", 10);
   await prisma.user.create({ data: { email: "admin@demo.org", name: "Meera (Trust admin)", role: "ADMIN", passwordHash } });
@@ -201,6 +255,7 @@ async function main() {
         ...s,
         districts: [...s.districts],
         documentsHi: [...s.documentsHi],
+        documentsEn: [...s.documentsEn],
         rules: s.rules,
         sourceUrl: src(s.code),
         lastChecked: new Date(s.lastChecked),
@@ -224,6 +279,7 @@ async function main() {
       titleHi: "माँ का स्वास्थ्य",
       titleEn: "Healthy mothers",
       blurbHi: "गर्भवती महिलाओं की जाँच, पोषण किट और अस्पताल तक पहुँच। ₹1,500 से एक माँ की तीन महीने की पोषण किट।",
+      blurbEn: "Check-ups, nutrition kits and transport to hospital for pregnant women. ₹1,500 covers one mother's 3-month nutrition kit.",
       goal: 2_500_000,
     },
   });
@@ -233,6 +289,7 @@ async function main() {
       titleHi: "अपनी कमाई",
       titleEn: "Her own income",
       blurbHi: "स्वयं सहायता समूहों को प्रशिक्षण और पहली मशीन। ₹5,000 से एक महिला का सिलाई प्रशिक्षण।",
+      blurbEn: "Training and a first machine for self-help groups. ₹5,000 trains one woman in tailoring.",
       goal: 4_000_000,
     },
   });
@@ -259,7 +316,20 @@ async function main() {
         createdAt: when,
       },
     });
-    await confirmPayment(d.id, `test_pay_seed_${d.id.slice(-6)}`, prisma, when);
+    toConfirm.push({
+      id: d.id,
+      when,
+      after: async (number) => {
+        if (h.frequency === "MONTHLY") {
+          // Mandate started 60 days ago; its next instalment is overdue so the
+          // admin "run monthly charges" button has real work to do in the demo.
+          await prisma.donation.update({ where: { id: d.id }, data: { mandateStatus: "ACTIVE", nextChargeAt: addMonth(when) } });
+        }
+        await prisma.outbox.create({
+          data: { to: donor.email, dedupeKey: `receipt:${number}`, subject: `रसीद ${number}: ₹${h.amount.toLocaleString("en-IN")} के दान के लिए धन्यवाद`, body: `प्रिय ${donor.name},\nआपके दान के लिए धन्यवाद। रसीद और 80G प्रमाण पत्र आपके खाते में है।`, createdAt: when },
+        });
+      },
+    });
   }
 
   // Guest donations so campaign totals look alive.
@@ -279,10 +349,48 @@ async function main() {
         createdAt: when,
       },
     });
-    await confirmPayment(d.id, `test_pay_seed_${d.id.slice(-6)}`, prisma, when);
+    toConfirm.push({ id: d.id, when });
   }
 
-  console.log("Seeded: 2 users, %d schemes, 9 help centres, 2 campaigns, 21 paid donations", schemes.length);
+  // A campaign push over the last two weeks, so the dashboard chart has shape.
+  for (let i = 0; i < 30; i++) {
+    const campaign = i % 4 === 0 ? livelihood : health;
+    const when = new Date(Date.now() - ((i * 7) % 14) * 86_400_000 - (i % 5) * 3_600_000);
+    const d = await prisma.donation.create({
+      data: {
+        idempotencyKey: randomUUID(),
+        campaignId: campaign.id,
+        amount: [500, 1000, 1500, 2500, 1000, 5000][i % 6],
+        donorName: names[(i + 2) % names.length],
+        donorEmail: `recent${i}@example.com`,
+        donorPan: `ABCP${String.fromCharCode(65 + ((i + 7) % 26))}${String(2000 + i)}L`,
+        donorAddress: "Madhya Pradesh",
+        createdAt: when,
+      },
+    });
+    toConfirm.push({ id: d.id, when });
+  }
+
+  toConfirm.sort((a, b) => a.when.getTime() - b.when.getTime());
+  for (const c of toConfirm) {
+    const r = await confirmPayment(c.id, `test_pay_seed_${c.id.slice(-6)}`, prisma, c.when);
+    await c.after?.(r.number);
+  }
+
+  await prisma.callbackRequest.createMany({
+    data: [
+      { phone: "9876500011", district: "SEHORE", schemeCodes: ["SCH-014", "SCH-052"], createdAt: new Date(Date.now() - 2 * 86_400_000) },
+      { phone: "9876500022", district: "VIDISHA", schemeCodes: ["SCH-031"], createdAt: new Date(Date.now() - 1 * 86_400_000) },
+      { phone: "9876500033", district: "HARDA", schemeCodes: [], createdAt: new Date(Date.now() - 3 * 3_600_000) },
+      { phone: "9876500044", district: "BHOPAL", schemeCodes: ["SCH-022"], handled: true, handledBy: "admin@demo.org", handledAt: new Date(Date.now() - 4 * 86_400_000), note: "SHG लोन के कागज़ समझाए, ब्लॉक कार्यालय भेजा", createdAt: new Date(Date.now() - 5 * 86_400_000) },
+    ],
+  });
+  const vias = ["QUESTIONS", "AI_TEXT", "QUESTIONS", "VOICE", "AI_TEXT", "QUESTIONS"];
+  await prisma.finderUse.createMany({
+    data: Array.from({ length: 64 }, (_, i) => ({ via: vias[i % vias.length], matches: (i % 4) + 1, createdAt: new Date(Date.now() - (i % 28) * 86_400_000 - i * 3_600_000) })),
+  });
+
+  console.log("Seeded: 2 users, %d schemes, 9 help centres, 2 campaigns, 51 paid donations", schemes.length);
 }
 
 main()
