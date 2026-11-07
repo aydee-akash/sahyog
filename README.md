@@ -1,36 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# सहयोग (Sahyog): women's schemes finder + 80G donations
 
-## Getting Started
+A Hindi-first site for a Bhopal women's-welfare trust. Women and field workers find the government schemes they can use. Donors give in three steps and get an 80G receipt instantly. The trust edits scheme pages through an AI-drafted, human-reviewed workflow.
 
-First, run the development server:
+- **Design doc:** [docs/TDD.md](docs/TDD.md)
+- **Run and deploy:** [deployment.md](deployment.md)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What works
+- **Home page:** published schemes, filterable by need and district, in large-type Hindi
+- **Scheme page:** benefits, documents, how to apply, nearest help centre, official source link and last-checked date
+- **Eligibility finder:** 6 questions. Shows *possible* matches with the rules it checked, plus a consented call-back request
+- **Donation in 3 steps:** one-time or monthly, PAN capture, mock gateway (test UPI and cards; foreign cards are blocked with an FCRA notice)
+- **Instant receipt:** gapless, per-financial-year receipt number and 80G PDF
+- **Donor account:** history and certificate downloads
+- **Admin:**
+  - scheme CMS: AI drafts plain-Hindi summaries from the official notice → an editor checks them → Draft → In review → Published, with an audit log
+  - donations by campaign
+  - Form 10BD CSV export
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Stack
+Next.js 15 (App Router, server-rendered), TypeScript, Tailwind v4, Postgres + Prisma, `jose` sessions, `pdf-lib`, Anthropic API, Vitest.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tests
+`npm test` covers:
+- eligibility rules
+- PAN, amount and financial-year validation
+- the mock gateway
+- an integration test: 200 concurrent payment confirmations produce 200 unique, gapless receipt numbers, and replayed confirmations stay idempotent
