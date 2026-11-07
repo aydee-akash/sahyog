@@ -9,6 +9,9 @@ import { requireAdmin } from "@/lib/auth";
 import { draftHindiSummary, DraftResult } from "@/lib/ai";
 import { canTransition, missingForReview } from "@/lib/workflow";
 import { DISTRICTS, NEEDS } from "@/lib/content";
+import { cancelReceipt, NotPayableError } from "@/lib/receipts";
+import { runDueInstalments } from "@/lib/mandates";
+import { afterPaid } from "@/lib/afterPaid";
 
 const needKeys = NEEDS.map((n) => n.key) as [string, ...string[]];
 const districtKeys = DISTRICTS.map((d) => d.key) as [string, ...string[]];
@@ -32,6 +35,11 @@ const contentSchema = z.object({
   eligibilityHi: z.string().trim().max(500),
   documentsHi: z.array(z.string().trim().min(1).max(120)).max(12),
   howToApplyHi: z.string().trim().max(800),
+  summaryEn: z.string().trim().max(600),
+  benefitEn: z.string().trim().max(300),
+  eligibilityEn: z.string().trim().max(500),
+  documentsEn: z.array(z.string().trim().min(1).max(120)).max(12),
+  howToApplyEn: z.string().trim().max(800),
   sourceUrl: z.string().trim().url(),
   noticeText: z.string().trim().min(20).max(10_000),
   lastChecked: z.coerce.date(),
@@ -113,4 +121,79 @@ export async function createScheme(_: { error?: string }, form: FormData): Promi
   });
   await audit(admin.email, "create", s.id);
   redirect(`/admin/schemes/${s.id}`);
+}
+
+// --- Call-back inbox ------------------------------------------------------
+
+export async function updateCallback(form: FormData) {
+  const admin = await requireAdmin();
+  const parsed = z
+    .object({ id: z.string().min(1), handled: z.enum(["true", "false"]), note: z.string().max(500).default("") })
+    .safeParse(Object.fromEntries(form));
+  if (!parsed.success) return;
+  const handled = parsed.data.handled === "true";
+  await prisma.callbackRequest.update({
+    where: { id: parsed.data.id },
+    data: { handled, note: parsed.data.note, handledBy: handled ? admin.email : null, handledAt: handled ? new Date() : null },
+  });
+  await prisma.auditLog.create({ data: { actor: admin.email, action: handled ? "callback_done" : "callback_reopen", entity: "Callback", entityId: parsed.data.id } });
+  revalidatePath("/admin/callbacks");
+  revalidatePath("/admin");
+}
+
+// --- Campaigns -------------------------------------------------------------
+
+const campaignSchema = z.object({
+  id: z.string().optional(),
+  slug: z.string().trim().regex(/^[a-z0-9-]{3,40}$/, "slug: छोटे अक्षर, अंक और - (3–40)"),
+  titleHi: z.string().trim().min(2).max(80),
+  titleEn: z.string().trim().min(2).max(80),
+  blurbHi: z.string().trim().min(10).max(300),
+  blurbEn: z.string().trim().max(300).default(""),
+  goal: z.coerce.number().int().min(10_000).max(1_000_000_000),
+  active: z.enum(["on"]).optional(),
+});
+
+export async function saveCampaign(_: { error?: string; ok?: boolean }, form: FormData): Promise<{ error?: string; ok?: boolean }> {
+  const admin = await requireAdmin();
+  const parsed = campaignSchema.safeParse(Object.fromEntries(form));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const { id, active, ...data } = parsed.data;
+  const clash = await prisma.campaign.findUnique({ where: { slug: data.slug } });
+  if (clash && clash.id !== id) return { error: "यह slug पहले से है" };
+  const c = id
+    ? await prisma.campaign.update({ where: { id }, data: { ...data, active: !!active } })
+    : await prisma.campaign.create({ data: { ...data, active: !!active } });
+  await prisma.auditLog.create({ data: { actor: admin.email, action: id ? "campaign_update" : "campaign_create", entity: "Campaign", entityId: c.id } });
+  revalidatePath("/admin/campaigns");
+  revalidatePath("/");
+  if (!id) redirect("/admin/campaigns");
+  return { ok: true };
+}
+
+// --- Receipts --------------------------------------------------------------
+
+export async function cancelReceiptAction(_: { error?: string; ok?: boolean }, form: FormData): Promise<{ error?: string; ok?: boolean }> {
+  const admin = await requireAdmin();
+  const parsed = z.object({ receiptId: z.string().min(1), reason: z.string().trim().min(5, "कारण लिखें (कम से कम 5 अक्षर)").max(300) }).safeParse(Object.fromEntries(form));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  try {
+    await cancelReceipt(parsed.data.receiptId, parsed.data.reason, admin.email);
+  } catch (e) {
+    if (e instanceof NotPayableError) return { error: "रसीद पहले से रद्द है" };
+    throw e;
+  }
+  await prisma.auditLog.create({ data: { actor: admin.email, action: "receipt_cancel", entity: "Receipt", entityId: parsed.data.receiptId, detail: parsed.data.reason } });
+  revalidatePath("/admin/donations");
+  return { ok: true };
+}
+
+export async function runMonthlyCharges(): Promise<{ mandates: number; receipts: string[] }> {
+  const admin = await requireAdmin();
+  const res = await runDueInstalments();
+  for (const r of res.receipts) await afterPaid(r.donationId);
+  await prisma.auditLog.create({ data: { actor: admin.email, action: "run_monthly", entity: "Mandate", entityId: "-", detail: `${res.receipts.length} receipts` } });
+  revalidatePath("/admin");
+  revalidatePath("/admin/donations");
+  return { mandates: res.mandates, receipts: res.receipts.map((r) => r.number) };
 }

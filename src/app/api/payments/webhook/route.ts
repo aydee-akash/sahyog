@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { confirmPayment, markPaymentFailed, NotPayableError } from "@/lib/receipts";
+import { afterPaid } from "@/lib/afterPaid";
 
 // Gateway → us. Signed with PAYMENT_WEBHOOK_SECRET (HMAC-SHA256 of the raw body).
 // Safe to retry: confirmPayment is idempotent per donation.
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
   try {
     if (e.type === "payment.captured") {
       const receipt = await confirmPayment(e.donationId, e.paymentRef);
+      await afterPaid(e.donationId);
       return NextResponse.json({ receipt: receipt.number });
     }
     await markPaymentFailed(e.donationId, e.reason ?? "FAILED");

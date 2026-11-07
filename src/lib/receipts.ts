@@ -54,3 +54,16 @@ export async function markPaymentFailed(donationId: string, reason: string, db: 
     data: { failureReason: reason },
   });
 }
+
+/**
+ * Cancels a receipt (e.g. refund or bounced mandate). The number is kept and
+ * never reused, so the series stays gapless for auditors; the PDF is stamped
+ * CANCELLED and Form 10BD leaves it out.
+ */
+export async function cancelReceipt(receiptId: string, reason: string, actor: string, db: PrismaClient = defaultPrisma) {
+  const r = await db.receipt.updateMany({
+    where: { id: receiptId, cancelledAt: null },
+    data: { cancelledAt: new Date(), cancelReason: reason, cancelledBy: actor },
+  });
+  if (r.count === 0) throw new NotPayableError("Receipt not found or already cancelled");
+}

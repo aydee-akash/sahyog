@@ -2,17 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
+import { Lock } from "lucide-react";
+import { DICTS, Lang } from "@/lib/i18n";
 import { createDonation, payDonation } from "@/app/actions/donate";
 import { TEST_CARDS, TEST_UPI } from "@/lib/payments";
 import { formatINR } from "@/lib/money";
-import { MIN_DONATION } from "@/lib/validation";
+import { MIN_DONATION } from "@/lib/limits";
 
 const PRESETS = [500, 1000, 2500, 5000];
-const STEPS = ["राशि", "आपकी जानकारी", "भुगतान"];
 
-type Props = { campaignSlug: string; prefill?: { name: string; email: string } };
+type Props = { lang: Lang; campaignSlug: string; prefill?: { name: string; email: string } };
 
-export function DonateFlow({ campaignSlug, prefill }: Props) {
+export function DonateFlow({ lang, campaignSlug, prefill }: Props) {
+  const t = DICTS[lang].donate;
   const router = useRouter();
   // One key per page load: retries and double taps map to one donation.
   const idempotencyKey = useMemo(() => crypto.randomUUID(), []);
@@ -38,7 +40,7 @@ export function DonateFlow({ campaignSlug, prefill }: Props) {
 
   function nextFromAmount() {
     if (!Number.isInteger(finalAmount) || finalAmount < MIN_DONATION) {
-      setErrors({ amount: `कम से कम ${formatINR(MIN_DONATION)} लिखें` });
+      setErrors({ amount: t.minError(formatINR(MIN_DONATION)) });
       return;
     }
     setErrors({});
@@ -50,7 +52,7 @@ export function DonateFlow({ campaignSlug, prefill }: Props) {
     start(async () => {
       const res = await createDonation({ idempotencyKey, campaignSlug, amount: finalAmount, frequency, ...details });
       if (!res.ok) {
-        setErrors(res.fieldErrors ?? { form: res.error ?? "कुछ गड़बड़ हुई" });
+        setErrors(res.fieldErrors ?? { form: res.error ?? DICTS[lang].common.error });
         if (res.fieldErrors?.amount) setStep(0);
         return;
       }
@@ -91,8 +93,8 @@ export function DonateFlow({ campaignSlug, prefill }: Props) {
 
   return (
     <div className="card grid gap-6 p-5 sm:p-6">
-      <ol className="flex gap-2 text-[0.9rem]" aria-label="दान के चरण">
-        {STEPS.map((s, i) => (
+      <ol className="flex gap-2 text-[0.9rem]" aria-label={t.stepsLabel}>
+        {t.steps.map((s, i) => (
           <li key={s} className="flex flex-1 flex-col gap-1.5" aria-current={i === step ? "step" : undefined}>
             <span className={`h-1.5 rounded-full ${i <= step ? "bg-accent" : "bg-line"}`} />
             <span className={i === step ? "font-semibold text-ink" : "text-muted"}>{i + 1}. {s}</span>
@@ -103,7 +105,7 @@ export function DonateFlow({ campaignSlug, prefill }: Props) {
       {step === 0 && (
         <div className="grid gap-5">
           <fieldset className="grid gap-2">
-            <legend className="label">कितना दान करेंगे?</legend>
+            <legend className="label">{t.howMuch}</legend>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {PRESETS.map((p) => (
                 <button
@@ -117,21 +119,21 @@ export function DonateFlow({ campaignSlug, prefill }: Props) {
                 </button>
               ))}
             </div>
-            <label htmlFor="custom" className="mt-2 text-[0.95rem] text-muted">या अपनी राशि (₹)</label>
+            <label htmlFor="custom" className="mt-2 text-[0.95rem] text-muted">{t.own}</label>
             <input
               id="custom"
               inputMode="numeric"
               value={custom}
               onChange={(e) => setCustom(e.target.value.replace(/\D/g, "").slice(0, 7))}
               className="input"
-              placeholder="जैसे 3000"
+              placeholder={t.ownPlaceholder}
               aria-invalid={!!errors.amount}
             />
             {errors.amount && <p className="text-bad" role="alert">{errors.amount}</p>}
           </fieldset>
 
           <fieldset className="grid gap-2">
-            <legend className="label">कितनी बार?</legend>
+            <legend className="label">{t.howOften}</legend>
             <div className="grid grid-cols-2 gap-2">
               {(["ONE_TIME", "MONTHLY"] as const).map((f) => (
                 <button
@@ -141,39 +143,39 @@ export function DonateFlow({ campaignSlug, prefill }: Props) {
                   aria-pressed={frequency === f}
                   className={`btn-secondary ${frequency === f ? "chip-on" : ""}`}
                 >
-                  {f === "ONE_TIME" ? "एक बार" : "हर महीने"}
+                  {f === "ONE_TIME" ? t.once : t.monthly}
                 </button>
               ))}
             </div>
             {frequency === "MONTHLY" && (
-              <p className="text-[0.9rem] text-muted">हर महीने उसी तारीख को {formatINR(finalAmount || 0)}। कभी भी रोक सकते हैं। हर किस्त की अलग रसीद मिलेगी।</p>
+              <p className="text-[0.9rem] text-muted">{t.monthlyNote(formatINR(finalAmount || 0))}</p>
             )}
           </fieldset>
 
           <button onClick={nextFromAmount} className="btn-primary">
-            आगे: {formatINR(finalAmount || 0)}{frequency === "MONTHLY" ? " / महीना" : ""}
+            {t.next} {formatINR(finalAmount || 0)}{frequency === "MONTHLY" ? t.perMonth : ""}
           </button>
         </div>
       )}
 
       {step === 1 && (
         <form onSubmit={submitDetails} className="grid gap-4" noValidate>
-          {field("donorName", "पूरा नाम (PAN कार्ड जैसा)", { autoComplete: "name" })}
-          {field("donorEmail", "ईमेल", { type: "email", autoComplete: "email", inputMode: "email" }, "रसीद और 80G प्रमाण पत्र यहाँ भेजा जाएगा")}
+          {field("donorName", t.name, { autoComplete: "name" })}
+          {field("donorEmail", t.email, { type: "email", autoComplete: "email", inputMode: "email" }, t.emailHint)}
           {field(
             "donorPan",
-            "PAN नंबर",
+            t.pan,
             { autoCapitalize: "characters", maxLength: 10, style: { textTransform: "uppercase" } },
-            "80G टैक्स छूट के लिए ज़रूरी। ट्रस्ट इसे Form 10BD में आयकर विभाग को भेजता है।",
+            t.panHint,
           )}
-          {field("donorAddress", "पता", { autoComplete: "street-address" })}
+          {field("donorAddress", t.address, { autoComplete: "street-address" })}
           {errors.form && <p role="alert" className="text-bad">{errors.form}</p>}
           <p className="text-[0.9rem] text-muted">
-            आपकी जानकारी केवल रसीद और आयकर रिपोर्टिंग के लिए है (DPDP Act 2023)। हम इसे किसी को बेचते या साझा नहीं करते।
+            {t.privacy}
           </p>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setStep(0)} className="btn-secondary">पीछे</button>
-            <button disabled={pending} className="btn-primary flex-1">{pending ? "सेव हो रहा है…" : "आगे: भुगतान"}</button>
+            <button type="button" onClick={() => setStep(0)} className="btn-secondary">{t.back}</button>
+            <button disabled={pending} className="btn-primary flex-1">{pending ? t.saving : t.toPay}</button>
           </div>
         </form>
       )}
@@ -181,9 +183,9 @@ export function DonateFlow({ campaignSlug, prefill }: Props) {
       {step === 2 && (
         <form onSubmit={pay} className="grid gap-4">
           <p className="rounded-xl bg-warn-soft p-3 text-[0.95rem] text-warn">
-            <strong>टेस्ट मोड:</strong> असली पैसा नहीं कटेगा।
+            <strong>{t.testMode}</strong> {t.noReal}
           </p>
-          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="भुगतान का तरीका">
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t.method}>
             {(["UPI", "CARD"] as const).map((m) => (
               <button
                 key={m}
@@ -193,38 +195,39 @@ export function DonateFlow({ campaignSlug, prefill }: Props) {
                 onClick={() => { setMethod(m); setPayError(null); }}
                 className={`btn-secondary ${method === m ? "chip-on" : ""}`}
               >
-                {m === "UPI" ? "UPI" : "डेबिट / क्रेडिट कार्ड"}
+                {m === "UPI" ? "UPI" : t.card}
               </button>
             ))}
           </div>
 
           {method === "UPI" ? (
             <div>
-              <label htmlFor="upi" className="label">UPI ID</label>
+              <label htmlFor="upi" className="label">{t.upiId}</label>
               <input id="upi" value={upiId} onChange={(e) => setUpiId(e.target.value)} className="input" placeholder="name@bank" autoComplete="off" />
-              <p className="mt-1 text-[0.9rem] text-muted">टेस्ट: <code>{TEST_UPI.success}</code> सफल, <code>{TEST_UPI.failure}</code> असफल</p>
+              <p className="mt-1 text-[0.9rem] text-muted">{t.test} <code>{TEST_UPI.success}</code> {t.ok}, <code>{TEST_UPI.failure}</code> {t.fail}</p>
             </div>
           ) : (
             <div>
-              <label htmlFor="card" className="label">कार्ड नंबर</label>
+              <label htmlFor="card" className="label">{t.cardNo}</label>
               <input id="card" inputMode="numeric" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} className="input" autoComplete="cc-number" />
               <p className="mt-1 text-[0.9rem] text-muted">
-                टेस्ट: भारतीय <code>{TEST_CARDS.success}</code> · अस्वीकार <code>{TEST_CARDS.declined}</code> · विदेशी <code>{TEST_CARDS.foreign}</code>
+                {t.test} {t.indian} <code>{TEST_CARDS.success}</code> · {t.declined} <code>{TEST_CARDS.declined}</code> · {t.foreign} <code>{TEST_CARDS.foreign}</code>
               </p>
             </div>
           )}
 
           {payError && (
             <div role="alert" className={`rounded-xl p-3 ${payError.code === "FOREIGN_CARD" ? "bg-warn-soft text-warn" : "bg-bad-soft text-bad"}`}>
-              {payError.code === "FOREIGN_CARD" && <strong className="block">विदेशी कार्ड स्वीकार नहीं</strong>}
+              {payError.code === "FOREIGN_CARD" && <strong className="block">{t.foreignTitle}</strong>}
               {payError.message}
             </div>
           )}
 
+          <p className="flex items-center gap-1.5 text-[0.85rem] text-muted"><Lock className="size-3.5" aria-hidden /> {t.secure}</p>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setStep(1)} className="btn-secondary">पीछे</button>
+            <button type="button" onClick={() => setStep(1)} className="btn-secondary">{t.back}</button>
             <button disabled={pending} className="btn-primary flex-1">
-              {pending ? "भुगतान हो रहा है…" : `${formatINR(finalAmount)} दान करें`}
+              <Lock className="size-4" aria-hidden /> {pending ? t.paying : t.give(formatINR(finalAmount))}
             </button>
           </div>
         </form>

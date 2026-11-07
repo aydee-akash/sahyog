@@ -1,11 +1,15 @@
 import Link from "next/link";
+import { SearchX } from "lucide-react";
+import { getT } from "@/lib/lang";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const { t } = await getT();
   return (
     <div className="mx-auto grid max-w-md justify-items-start gap-4 py-12">
-      <h1 className="text-2xl font-bold">यह पेज नहीं मिला</h1>
-      <p className="text-muted">हो सकता है लिंक पुराना हो या योजना अभी प्रकाशित न हुई हो।</p>
-      <Link href="/" className="btn-primary">होम पेज पर जाएँ</Link>
+      <SearchX className="size-10 text-accent" aria-hidden />
+      <h1 className="text-2xl font-bold">{t.common.notFound}</h1>
+      <p className="text-muted">{t.common.notFoundLead}</p>
+      <Link href="/" className="btn-primary">{t.common.goHome}</Link>
     </div>
   );
 }

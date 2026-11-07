@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { MAX_DONATION, MIN_DONATION } from "./limits";
+
+export { MAX_DONATION, MIN_DONATION };
 
 // Individual PAN: 5 letters (4th is the holder type), 4 digits, 1 letter.
 export const PAN_RE = /^[A-Z]{3}[ABCFGHLJPT][A-Z][0-9]{4}[A-Z]$/;
@@ -7,8 +10,6 @@ export function normalisePan(raw: string): string {
   return raw.replace(/\s+/g, "").toUpperCase();
 }
 
-export const MIN_DONATION = 100;
-export const MAX_DONATION = 1_000_000;
 
 export const donorDetailsSchema = z.object({
   idempotencyKey: z.string().uuid(),

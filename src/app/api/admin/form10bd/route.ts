@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const fy = req.nextUrl.searchParams.get("fy") ?? "";
   if (!/^\d{4}-\d{2}$/.test(fy)) return NextResponse.json({ error: "fy must look like 2026-27" }, { status: 400 });
 
-  const receipts = await prisma.receipt.findMany({ where: { fy }, include: { donation: true }, orderBy: { seq: "asc" } });
+  const receipts = await prisma.receipt.findMany({ where: { fy, cancelledAt: null }, include: { donation: true }, orderBy: { seq: "asc" } });
   const byPan = new Map<string, { name: string; address: string; amount: number; receipts: string[] }>();
   for (const r of receipts) {
     const d = r.donation;

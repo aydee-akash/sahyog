@@ -14,7 +14,7 @@ describe("eligibility rules", () => {
   it("returns MAYBE, not a promise, when the woman is unsure about her BPL card", () => {
     const m = evaluate(widowPension, [], { ...base, marital: "WIDOW", bpl: "UNSURE" });
     expect(m.verdict).toBe("MAYBE");
-    expect(m.checks.find((c) => c.label.includes("BPL"))?.result).toBe("UNKNOWN");
+    expect(m.checks.find((c) => c.rule === "BPL")?.result).toBe("UNKNOWN");
   });
 
   it("rejects on age boundaries (80 is outside 18-79, 79 is inside)", () => {

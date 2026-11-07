@@ -17,6 +17,11 @@ type Content = {
   eligibilityHi: string;
   documentsHi: string[];
   howToApplyHi: string;
+  summaryEn: string;
+  benefitEn: string;
+  eligibilityEn: string;
+  documentsEn: string[];
+  howToApplyEn: string;
   sourceUrl: string;
   noticeText: string;
   lastChecked: string;
@@ -40,6 +45,8 @@ export function Editor({ scheme, log }: Props) {
   const router = useRouter();
   const [c, setC] = useState<Content>(scheme.content);
   const [docsText, setDocsText] = useState(scheme.content.documentsHi.join("\n"));
+  const [docsEnText, setDocsEnText] = useState(scheme.content.documentsEn.join("\n"));
+  const [tab, setTab] = useState<"hi" | "en">("hi");
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err" | "warn"; text: string } | null>(null);
   const [notFound, setNotFound] = useState<string[]>([]);
@@ -55,7 +62,8 @@ export function Editor({ scheme, log }: Props) {
   const toggle = <T extends string>(list: T[] | undefined, v: T) => (list?.includes(v) ? list.filter((x) => x !== v) : [...(list ?? []), v]);
 
   function payload() {
-    return { ...c, documentsHi: docsText.split("\n").map((d) => d.trim()).filter(Boolean) };
+    const lines = (t: string) => t.split("\n").map((d) => d.trim()).filter(Boolean);
+    return { ...c, documentsHi: lines(docsText), documentsEn: lines(docsEnText) };
   }
 
   function draft() {
@@ -67,8 +75,20 @@ export function Editor({ scheme, log }: Props) {
         return;
       }
       const d = res.draft;
-      setC((prev) => ({ ...prev, summaryHi: d.summaryHi, benefitHi: d.benefitHi, eligibilityHi: d.eligibilityHi, howToApplyHi: d.howToApplyHi, aiDrafted: true }));
+      setC((prev) => ({
+        ...prev,
+        summaryHi: d.summaryHi,
+        benefitHi: d.benefitHi,
+        eligibilityHi: d.eligibilityHi,
+        howToApplyHi: d.howToApplyHi,
+        summaryEn: d.summaryEn || prev.summaryEn,
+        benefitEn: d.benefitEn || prev.benefitEn,
+        eligibilityEn: d.eligibilityEn || prev.eligibilityEn,
+        howToApplyEn: d.howToApplyEn || prev.howToApplyEn,
+        aiDrafted: true,
+      }));
       setDocsText(d.documentsHi.join("\n"));
+      if (d.documentsEn.length) setDocsEnText(d.documentsEn.join("\n"));
       setNotFound(d.notFound);
       setDirty(true);
       setMsg({ kind: "warn", text: "AI ड्राफ़्ट भर दिया गया। सूचना से मिलाकर हर लाइन जाँचें, फिर सेव करें।" });
@@ -167,11 +187,38 @@ export function Editor({ scheme, log }: Props) {
           )}
           <Text label="नाम (हिंदी)" value={c.titleHi} onChange={(v) => set("titleHi", v)} />
           <Text label="Name (English)" value={c.titleEn} onChange={(v) => set("titleEn", v)} />
-          <Text label="सारांश (2–3 वाक्य)" value={c.summaryHi} onChange={(v) => set("summaryHi", v)} rows={3} />
-          <Text label="लाभ" value={c.benefitHi} onChange={(v) => set("benefitHi", v)} />
-          <Text label="कौन आवेदन कर सकती है" value={c.eligibilityHi} onChange={(v) => set("eligibilityHi", v)} rows={2} />
-          <Text label="ज़रूरी कागज़ (हर लाइन में एक)" value={docsText} onChange={(v) => { setDocsText(v); setDirty(true); }} rows={4} />
-          <Text label="आवेदन कैसे करें" value={c.howToApplyHi} onChange={(v) => set("howToApplyHi", v)} rows={3} />
+          <div className="flex gap-1 rounded-xl bg-paper p-1 ring-1 ring-line" role="tablist" aria-label="भाषा">
+            {(["hi", "en"] as const).map((l) => (
+              <button
+                key={l}
+                type="button"
+                role="tab"
+                aria-selected={tab === l}
+                onClick={() => setTab(l)}
+                className={`flex-1 rounded-lg py-2 font-semibold ${tab === l ? "bg-card text-accent-strong shadow-sm" : "text-muted"}`}
+              >
+                {l === "hi" ? "हिंदी (मुख्य)" : "English"}
+              </button>
+            ))}
+          </div>
+          {tab === "hi" ? (
+            <>
+              <Text label="सारांश (2–3 वाक्य)" value={c.summaryHi} onChange={(v) => set("summaryHi", v)} rows={3} />
+              <Text label="लाभ" value={c.benefitHi} onChange={(v) => set("benefitHi", v)} />
+              <Text label="कौन आवेदन कर सकती है" value={c.eligibilityHi} onChange={(v) => set("eligibilityHi", v)} rows={2} />
+              <Text label="ज़रूरी कागज़ (हर लाइन में एक)" value={docsText} onChange={(v) => { setDocsText(v); setDirty(true); }} rows={4} />
+              <Text label="आवेदन कैसे करें" value={c.howToApplyHi} onChange={(v) => set("howToApplyHi", v)} rows={3} />
+            </>
+          ) : (
+            <>
+              <p className="text-[0.9rem] text-muted">खाली छोड़ने पर English पेज पर हिंदी दिखेगी।</p>
+              <Text label="Summary" value={c.summaryEn} onChange={(v) => set("summaryEn", v)} rows={3} />
+              <Text label="Benefit" value={c.benefitEn} onChange={(v) => set("benefitEn", v)} />
+              <Text label="Who can apply" value={c.eligibilityEn} onChange={(v) => set("eligibilityEn", v)} rows={2} />
+              <Text label="Documents (one per line)" value={docsEnText} onChange={(v) => { setDocsEnText(v); setDirty(true); }} rows={4} />
+              <Text label="How to apply" value={c.howToApplyEn} onChange={(v) => set("howToApplyEn", v)} rows={3} />
+            </>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>

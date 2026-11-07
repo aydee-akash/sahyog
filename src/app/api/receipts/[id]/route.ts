@@ -21,8 +21,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     donorAddress: donation.donorAddress,
     amount: donation.amount,
     paymentRef: donation.paymentRef ?? "-",
-    mode: donation.frequency === "MONTHLY" ? "Online (monthly mandate)" : "Online",
+    mode: donation.frequency === "MONTHLY" ? (donation.parentId ? "Online (monthly instalment)" : "Online (monthly mandate)") : "Online",
     campaign: donation.campaign.titleEn,
+    cancelled: donation.receipt.cancelledAt ? { at: donation.receipt.cancelledAt, reason: donation.receipt.cancelReason ?? "" } : undefined,
   });
   const filename = `80G-${donation.receipt.number.replaceAll("/", "-")}.pdf`;
   return new NextResponse(Buffer.from(pdf), {

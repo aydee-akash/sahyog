@@ -75,3 +75,24 @@ body {
 @utility badge {
   @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-semibold;
 }
+
+/* AI surfaces: a warm-to-violet gradient edge marks anything the AI touches. */
+@utility ai-ring {
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(var(--color-card), var(--color-card)) padding-box,
+    linear-gradient(120deg, #8a3b12, #c2410c 45%, #7c3aed) border-box;
+}
+@utility ai-badge {
+  @apply inline-flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-0.5 text-[0.8rem] font-semibold text-violet-800;
+}
+@utility fade-up {
+  animation: fade-up 0.35s ease-out both;
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

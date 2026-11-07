@@ -2,7 +2,6 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { STATUS_HI, formatDateHi, needHi } from "@/lib/content";
-import { AdminNav } from "../AdminNav";
 
 export const metadata = { title: "योजनाएँ · एडमिन" };
 
@@ -19,7 +18,6 @@ export default async function AdminSchemes() {
 
   return (
     <div className="grid gap-6">
-      <AdminNav active="schemes" />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[1.75rem] font-bold">योजनाएँ</h1>

@@ -6,6 +6,7 @@ import { donorDetailsSchema, paymentSchema } from "@/lib/validation";
 import { chargeMock } from "@/lib/payments";
 import { confirmPayment, markPaymentFailed } from "@/lib/receipts";
 import { signReceiptToken } from "@/lib/session";
+import { afterPaid } from "@/lib/afterPaid";
 
 export type CreateResult = { ok: true; donationId: string } | { ok: false; fieldErrors?: Record<string, string>; error?: string };
 
@@ -28,7 +29,14 @@ export async function createDonation(input: unknown): Promise<CreateResult> {
     create: { idempotencyKey, campaignId: campaign.id, userId: session?.role === "DONOR" ? session.userId : null, ...d },
   });
   if (donation.status === "PAID") return { ok: true, donationId: donation.id };
-  if (donation.amount !== d.amount || donation.donorPan !== d.donorPan || donation.donorName !== d.donorName) {
+  if (
+    donation.amount !== d.amount ||
+    donation.donorPan !== d.donorPan ||
+    donation.donorName !== d.donorName ||
+    donation.frequency !== d.frequency ||
+    donation.donorEmail !== d.donorEmail ||
+    donation.donorAddress !== d.donorAddress
+  ) {
     // Details changed after the first submit: update the still-pending donation.
     await prisma.donation.update({ where: { id: donation.id }, data: d });
   }
@@ -57,7 +65,8 @@ export async function payDonation(input: unknown): Promise<PayResult> {
     return { ok: false, code: result.code, message: result.message };
   }
   // In production this runs from the gateway webhook (see /api/payments/webhook);
-  // confirmPayment is idempotent so both paths can safely race.
+  // both paths are idempotent so they can safely race.
   await confirmPayment(donation.id, result.ref);
+  await afterPaid(donation.id);
   return done();
 }

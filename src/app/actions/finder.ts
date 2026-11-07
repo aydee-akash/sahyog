@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { Check, Rules, evaluate } from "@/lib/eligibility";
 import { DISTRICTS } from "@/lib/content";
+import { understandQuestion, ParseResult } from "@/lib/ai";
 
 const districtKeys = DISTRICTS.map((d) => d.key) as [string, ...string[]];
 
@@ -19,14 +20,17 @@ const answersSchema = z.object({
 export type FinderMatch = {
   code: string;
   titleHi: string;
+  titleEn: string;
   benefitHi: string;
+  benefitEn: string;
+  need: string;
   verdict: "LIKELY" | "MAYBE";
   checks: Check[];
 };
 
 export type FinderResult = { ok: true; matches: FinderMatch[] } | { ok: false; error: string };
 
-export async function findSchemes(input: unknown): Promise<FinderResult> {
+export async function findSchemes(input: unknown, via: "QUESTIONS" | "AI_TEXT" | "VOICE" = "QUESTIONS"): Promise<FinderResult> {
   const parsed = answersSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "कुछ जवाब अधूरे हैं। कृपया दोबारा देखें।" };
 
@@ -35,11 +39,28 @@ export async function findSchemes(input: unknown): Promise<FinderResult> {
   for (const s of schemes) {
     const m = evaluate(s.rules as Rules, s.districts, parsed.data);
     if (m.verdict !== "NO") {
-      matches.push({ code: s.code, titleHi: s.titleHi, benefitHi: s.benefitHi, verdict: m.verdict, checks: m.checks });
+      matches.push({
+        code: s.code,
+        titleHi: s.titleHi,
+        titleEn: s.titleEn,
+        benefitHi: s.benefitHi,
+        benefitEn: s.benefitEn,
+        need: s.need,
+        verdict: m.verdict,
+        checks: m.checks,
+      });
     }
   }
   matches.sort((a, b) => (a.verdict === b.verdict ? 0 : a.verdict === "LIKELY" ? -1 : 1));
+  // Anonymous usage count only (no answers stored) for the 50,000-uses goal.
+  await prisma.finderUse.create({ data: { via: z.enum(["QUESTIONS", "AI_TEXT", "VOICE"]).catch("QUESTIONS").parse(via), matches: matches.length } });
   return { ok: true, matches };
+}
+
+export async function understand(text: unknown): Promise<ParseResult | { error: string }> {
+  const parsed = z.string().trim().min(3).max(1000).safeParse(text);
+  if (!parsed.success) return { error: "कुछ और लिखें (कम से कम 3 अक्षर)।" };
+  return understandQuestion(parsed.data);
 }
 
 const callbackSchema = z.object({

@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { ExternalLink, FileText, ListChecks, MapPin, MessageCircle, Route, UsersRound } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { DISTRICTS, districtHi, formatDateHi, needHi } from "@/lib/content";
+import { getT } from "@/lib/lang";
+import { DISTRICTS, districtLabel, formatDate, needLabel, pick } from "@/lib/content";
 import { NeedIcon, PhoneIcon } from "@/components/icons";
+import { ListenButton } from "@/components/ListenButton";
 import { TRUST } from "@/lib/trust";
 
 type Params = Promise<{ code: string }>;
@@ -14,74 +17,95 @@ async function getScheme(code: string) {
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const s = await getScheme((await params).code);
-  return { title: s?.titleHi ?? "योजना" };
+  const [s, { lang }] = await Promise.all([getScheme((await params).code), getT()]);
+  return { title: s ? (lang === "en" ? s.titleEn : s.titleHi) : "योजना" };
 }
 
 export default async function SchemePage({ params, searchParams }: { params: Params; searchParams: Search }) {
-  const { code } = await params;
-  const { district } = await searchParams;
+  const [{ code }, { district }, { lang, t }] = await Promise.all([params, searchParams, getT()]);
   const scheme = await getScheme(code);
   if (!scheme) notFound();
+
+  const title = lang === "en" ? scheme.titleEn : scheme.titleHi;
+  const summary = pick(lang, scheme.summaryHi, scheme.summaryEn);
+  const benefit = pick(lang, scheme.benefitHi, scheme.benefitEn);
+  const eligibility = pick(lang, scheme.eligibilityHi, scheme.eligibilityEn);
+  const documents = pick(lang, scheme.documentsHi, scheme.documentsEn);
+  const howTo = pick(lang, scheme.howToApplyHi, scheme.howToApplyEn);
 
   const chosen = DISTRICTS.some((d) => d.key === district) ? district! : undefined;
   const centre = chosen ? await prisma.helpCentre.findFirst({ where: { district: chosen } }) : null;
   const notInDistrict = chosen && scheme.districts.length > 0 && !scheme.districts.includes(chosen);
 
+  const spoken = [title, summary, `${t.scheme.mayGet}: ${benefit}`, `${t.scheme.who}: ${eligibility}`, `${t.scheme.docs}: ${documents.join(", ")}`, `${t.scheme.how}: ${howTo}`].join(". ");
+  const share = `${title}\n${benefit}\n${t.scheme.who}: ${eligibility}\n\n${process.env.APP_URL ?? ""}/schemes/${scheme.code}`;
+
+  const Section = ({ id, icon, heading, children }: { id: string; icon: React.ReactNode; heading: string; children: React.ReactNode }) => (
+    <section aria-labelledby={id} className="grid gap-3">
+      <h2 id={id} className="flex items-center gap-2 text-xl font-bold">
+        <span className="grid size-8 place-items-center rounded-full bg-accent-soft text-accent">{icon}</span>
+        {heading}
+      </h2>
+      {children}
+    </section>
+  );
+
   return (
     <article className="mx-auto grid max-w-2xl gap-8">
       <div className="grid gap-3">
         <Link href={`/?need=${scheme.need}#schemes`} className="inline-flex items-center gap-2 text-[0.95rem] text-accent">
-          <NeedIcon need={scheme.need} className="size-5" /> {needHi(scheme.need)}
+          <NeedIcon need={scheme.need} className="size-5" /> {needLabel(scheme.need, lang)}
         </Link>
-        <h1 className="text-[2rem] font-bold leading-tight">{scheme.titleHi}</h1>
-        <p className="text-lg text-muted">{scheme.summaryHi}</p>
-        <div className="card mt-2 border-accent/40 bg-accent-soft p-5">
-          <p className="text-[0.95rem] text-muted">क्या मिल सकता है</p>
-          <p className="text-2xl font-bold text-accent-strong">{scheme.benefitHi}</p>
+        <h1 className="text-[2rem] font-bold leading-tight">{title}</h1>
+        <p className="text-lg text-muted">{summary}</p>
+        <div className="card mt-2 border-accent/30 bg-gradient-to-br from-accent-soft to-card p-5">
+          <p className="text-[0.95rem] text-muted">{t.scheme.mayGet}</p>
+          <p className="text-2xl font-bold text-accent-strong">{benefit}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <ListenButton text={spoken} lang={lang} labels={{ listen: t.scheme.listen, stop: t.scheme.stop }} />
+          <a href={`https://wa.me/?text=${encodeURIComponent(share)}`} target="_blank" rel="noopener noreferrer" className="btn-secondary">
+            <MessageCircle className="size-5" aria-hidden /> {t.scheme.share}
+          </a>
         </div>
       </div>
 
-      <section aria-labelledby="who" className="grid gap-2">
-        <h2 id="who" className="text-xl font-bold">कौन आवेदन कर सकती है</h2>
-        <p>{scheme.eligibilityHi}</p>
+      <Section id="who" icon={<UsersRound className="size-4" aria-hidden />} heading={t.scheme.who}>
+        <p>{eligibility}</p>
         {scheme.districts.length > 0 && (
-          <p className="text-muted">केवल इन ज़िलों में: {scheme.districts.map(districtHi).join(", ")}</p>
+          <p className="text-muted">{t.scheme.onlyIn} {scheme.districts.map((d) => districtLabel(d, lang)).join(", ")}</p>
         )}
-      </section>
+        <Link href="/finder" className="btn-ghost justify-self-start px-2"><ListChecks className="size-5" aria-hidden /> {t.scheme.checkMine}</Link>
+      </Section>
 
-      <section aria-labelledby="docs" className="grid gap-2">
-        <h2 id="docs" className="text-xl font-bold">ज़रूरी कागज़</h2>
+      <Section id="docs" icon={<FileText className="size-4" aria-hidden />} heading={t.scheme.docs}>
         <ul className="grid gap-2">
-          {scheme.documentsHi.map((d) => (
-            <li key={d} className="flex gap-3">
+          {documents.map((d) => (
+            <li key={d} className="flex gap-3 rounded-xl bg-card p-3 ring-1 ring-line">
               <span aria-hidden className="mt-2.5 size-2 shrink-0 rounded-full bg-accent" />
               {d}
             </li>
           ))}
         </ul>
-      </section>
+      </Section>
 
-      <section aria-labelledby="how" className="grid gap-2">
-        <h2 id="how" className="text-xl font-bold">आवेदन कैसे करें</h2>
-        <p>{scheme.howToApplyHi}</p>
-      </section>
+      <Section id="how" icon={<Route className="size-4" aria-hidden />} heading={t.scheme.how}>
+        <p>{howTo}</p>
+      </Section>
 
       <section aria-labelledby="help" className="card grid gap-4 p-5">
-        <h2 id="help" className="text-xl font-bold">नज़दीकी सहायता केंद्र</h2>
+        <h2 id="help" className="flex items-center gap-2 text-xl font-bold"><MapPin className="size-5 text-accent" aria-hidden /> {t.scheme.help}</h2>
         <form className="flex flex-wrap items-center gap-2">
-          <label htmlFor="district" className="sr-only">अपना ज़िला चुनें</label>
+          <label htmlFor="district" className="sr-only">{t.scheme.chooseDistrict}</label>
           <select id="district" name="district" defaultValue={chosen ?? ""} className="input w-auto">
-            <option value="" disabled>अपना ज़िला चुनें</option>
+            <option value="" disabled>{t.scheme.chooseDistrict}</option>
             {DISTRICTS.map((d) => (
-              <option key={d.key} value={d.key}>{d.hi}</option>
+              <option key={d.key} value={d.key}>{d[lang]}</option>
             ))}
           </select>
-          <button className="btn-secondary">केंद्र देखें</button>
+          <button className="btn-secondary">{t.scheme.showCentre}</button>
         </form>
-        {notInDistrict && (
-          <p className="rounded-xl bg-warn-soft p-3 text-warn">यह योजना {districtHi(chosen!)} में लागू नहीं है। फिर भी केंद्र पर दूसरी योजनाओं के बारे में पूछ सकती हैं।</p>
-        )}
+        {notInDistrict && <p className="rounded-xl bg-warn-soft p-3 text-warn">{t.scheme.notHere(districtLabel(chosen!, lang))}</p>}
         {centre ? (
           <div className="grid gap-1">
             <p className="font-semibold">{centre.name}</p>
@@ -91,19 +115,22 @@ export default async function SchemePage({ params, searchParams }: { params: Par
             </a>
           </div>
         ) : (
-          <p className="text-muted">ज़िला चुनें, या हेल्पलाइन पर कॉल करें: <a className="font-semibold text-accent" href={`tel:${TRUST.helpline.replace(/\D/g, "")}`}>{TRUST.helpline}</a></p>
+          <p className="text-muted">
+            {t.scheme.orCall}{" "}
+            <a className="font-semibold text-accent" href={`tel:${TRUST.helpline.replace(/\D/g, "")}`}>{TRUST.helpline}</a>
+          </p>
         )}
       </section>
 
       <footer className="grid gap-1 border-t border-line pt-4 text-[0.9rem] text-muted">
         <p>
-          आधिकारिक सूचना:{" "}
-          <a href={scheme.sourceUrl} className="text-accent underline" rel="noopener noreferrer" target="_blank">
-            स्रोत देखें
+          {t.scheme.source}{" "}
+          <a href={scheme.sourceUrl} className="inline-flex items-center gap-1 text-accent underline" rel="noopener noreferrer" target="_blank">
+            {t.scheme.seeSource} <ExternalLink className="size-3.5" aria-hidden />
           </a>
         </p>
-        <p>आखिरी बार जाँचा गया: {formatDateHi(scheme.lastChecked)}</p>
-        <p>यह सरल हिंदी सारांश है। नियम बदल सकते हैं, आवेदन से पहले विभाग से पुष्टि करें।</p>
+        <p>{t.scheme.lastChecked} {formatDate(scheme.lastChecked, lang)}</p>
+        <p>{t.scheme.plain}</p>
       </footer>
     </article>
   );

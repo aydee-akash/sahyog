@@ -23,14 +23,18 @@ export type Rules = {
   pregnancy?: Exclude<Pregnancy, "NO">[];
 };
 
-export type Check = { label: string; result: "MET" | "NOT_MET" | "UNKNOWN" };
+export type Check = {
+  rule: "AGE" | "MARITAL" | "BPL" | "SHG" | "PREGNANCY" | "DISTRICT";
+  label: { hi: string; en: string };
+  result: "MET" | "NOT_MET" | "UNKNOWN";
+};
 export type Match = { verdict: "LIKELY" | "MAYBE" | "NO"; checks: Check[] };
 
-const MARITAL_HI: Record<Marital, string> = {
-  MARRIED: "विवाहित",
-  WIDOW: "विधवा",
-  UNMARRIED: "अविवाहित",
-  SEPARATED: "तलाकशुदा / परित्यक्ता",
+const MARITAL: Record<Marital, { hi: string; en: string }> = {
+  MARRIED: { hi: "विवाहित", en: "married" },
+  WIDOW: { hi: "विधवा", en: "widow" },
+  UNMARRIED: { hi: "अविवाहित", en: "unmarried" },
+  SEPARATED: { hi: "तलाकशुदा / परित्यक्ता", en: "divorced / separated" },
 };
 
 function yesNo(answer: YesNo, required: boolean): Check["result"] {
@@ -45,34 +49,57 @@ export function evaluate(rules: Rules, districts: string[], a: Answers): Match {
     const min = rules.minAge ?? 0;
     const max = rules.maxAge ?? 120;
     checks.push({
-      label: rules.maxAge !== undefined ? `उम्र ${min} से ${max} वर्ष` : `उम्र ${min} वर्ष या अधिक`,
+      rule: "AGE",
+      label:
+        rules.maxAge !== undefined
+          ? { hi: `उम्र ${min} से ${max} वर्ष`, en: `Age ${min} to ${max}` }
+          : { hi: `उम्र ${min} वर्ष या अधिक`, en: `Age ${min} or above` },
       result: a.age >= min && a.age <= max ? "MET" : "NOT_MET",
     });
   }
   if (rules.marital?.length) {
     checks.push({
-      label: rules.marital.map((m) => MARITAL_HI[m]).join(" या "),
+      rule: "MARITAL",
+      label: {
+        hi: rules.marital.map((m) => MARITAL[m].hi).join(" या "),
+        en: rules.marital.map((m) => MARITAL[m].en).join(" or "),
+      },
       result: rules.marital.includes(a.marital) ? "MET" : "NOT_MET",
     });
   }
   if (rules.bpl !== undefined) {
-    checks.push({ label: rules.bpl ? "BPL राशन कार्ड हो" : "BPL कार्ड ज़रूरी नहीं", result: yesNo(a.bpl, rules.bpl) });
+    checks.push({
+      rule: "BPL",
+      label: rules.bpl ? { hi: "BPL राशन कार्ड हो", en: "Has a BPL ration card" } : { hi: "BPL कार्ड न हो", en: "No BPL card" },
+      result: yesNo(a.bpl, rules.bpl),
+    });
   }
   if (rules.shg !== undefined) {
-    checks.push({ label: "पंजीकृत स्वयं सहायता समूह (SHG) की सदस्य", result: yesNo(a.shg, rules.shg) });
+    checks.push({
+      rule: "SHG",
+      label: { hi: "पंजीकृत स्वयं सहायता समूह (SHG) की सदस्य", en: "Member of a registered self-help group" },
+      result: yesNo(a.shg, rules.shg),
+    });
   }
   if (rules.pregnancy?.length) {
+    const onlyFirst = rules.pregnancy.includes("FIRST") && !rules.pregnancy.includes("LATER");
+    const onlyLater = rules.pregnancy.includes("LATER") && !rules.pregnancy.includes("FIRST");
     checks.push({
-      label: rules.pregnancy.includes("LATER") && !rules.pregnancy.includes("FIRST")
-        ? "गर्भवती (दूसरा बच्चा)"
-        : rules.pregnancy.includes("FIRST") && !rules.pregnancy.includes("LATER")
-          ? "गर्भवती (पहला बच्चा)"
-          : "गर्भवती",
+      rule: "PREGNANCY",
+      label: onlyLater
+        ? { hi: "गर्भवती (दूसरा बच्चा)", en: "Pregnant (second child)" }
+        : onlyFirst
+          ? { hi: "गर्भवती (पहला बच्चा)", en: "Pregnant (first child)" }
+          : { hi: "गर्भवती", en: "Pregnant" },
       result: a.pregnancy !== "NO" && rules.pregnancy.includes(a.pregnancy) ? "MET" : "NOT_MET",
     });
   }
   if (districts.length) {
-    checks.push({ label: "आपके ज़िले में लागू", result: districts.includes(a.district) ? "MET" : "NOT_MET" });
+    checks.push({
+      rule: "DISTRICT",
+      label: { hi: "आपके ज़िले में लागू", en: "Available in your district" },
+      result: districts.includes(a.district) ? "MET" : "NOT_MET",
+    });
   }
 
   const verdict = checks.some((c) => c.result === "NOT_MET")

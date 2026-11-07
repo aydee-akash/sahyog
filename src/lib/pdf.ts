@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
 import { TRUST } from "./trust";
 import { rupeesInWords } from "./money";
 
@@ -12,6 +12,7 @@ export type ReceiptPdfInput = {
   paymentRef: string;
   mode: string;
   campaign: string;
+  cancelled?: { at: Date; reason: string };
 };
 
 const INK = rgb(0.12, 0.13, 0.15);
@@ -77,6 +78,14 @@ export async function buildReceiptPdf(r: ReceiptPdfInput): Promise<Uint8Array> {
   }
   y -= 20;
   text("TEST MODE - no real money was received.", left, 9, bold, ACCENT);
+
+  if (r.cancelled) {
+    page.drawText("CANCELLED", { x: 120, y: 360, size: 84, font: bold, color: rgb(0.65, 0.15, 0.11), opacity: 0.18, rotate: degrees(30) });
+    y -= 22;
+    text(`Cancelled on ${r.cancelled.at.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}: ${r.cancelled.reason}`.slice(0, 95), left, 10, bold, rgb(0.65, 0.15, 0.11));
+    y -= 14;
+    text("This receipt is void and not valid for 80G deduction.", left, 9.5, font, rgb(0.65, 0.15, 0.11));
+  }
 
   return doc.save();
 }
