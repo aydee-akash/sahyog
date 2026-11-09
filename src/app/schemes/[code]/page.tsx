@@ -53,7 +53,7 @@ export default async function SchemePage({ params, searchParams }: { params: Par
   return (
     <article className="mx-auto grid max-w-2xl gap-8">
       <div className="grid gap-3">
-        <Link href={`/?need=${scheme.need}#schemes`} className="inline-flex items-center gap-2 text-[0.95rem] text-accent">
+        <Link prefetch={false} href={`/?need=${scheme.need}#schemes`} className="inline-flex items-center gap-2 text-[0.95rem] text-accent">
           <NeedIcon need={scheme.need} className="size-5" /> {needLabel(scheme.need, lang)}
         </Link>
         <h1 className="text-[2.1rem] leading-tight">{title}</h1>
@@ -75,7 +75,7 @@ export default async function SchemePage({ params, searchParams }: { params: Par
         {scheme.districts.length > 0 && (
           <p className="text-muted">{t.scheme.onlyIn} {scheme.districts.map((d) => districtLabel(d, lang)).join(", ")}</p>
         )}
-        <Link href="/finder" className="btn-ghost justify-self-start px-2"><ListChecks className="size-5" aria-hidden /> {t.scheme.checkMine}</Link>
+        <Link prefetch={false} href="/finder" className="btn-ghost justify-self-start px-2"><ListChecks className="size-5" aria-hidden /> {t.scheme.checkMine}</Link>
       </Section>
 
       <Section id="docs" icon={<FileText className="size-5" aria-hidden />} heading={t.scheme.docs}>

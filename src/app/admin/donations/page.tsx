@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { formatINR } from "@/lib/money";
 import { formatDateHi } from "@/lib/content";
 import { financialYear } from "@/lib/fy";
-import { CancelReceipt } from "./CancelReceipt";
+import { CancelReceiptButton, CancelReceiptDialog } from "./CancelReceipt";
 
 export const metadata = { title: "दान और रसीदें | एडमिन" };
 
@@ -41,6 +41,7 @@ export default async function AdminDonations({ searchParams }: { searchParams: S
 
   return (
     <div className="grid gap-6">
+      <CancelReceiptDialog />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[1.75rem]">दान और रसीदें</h1>
@@ -123,7 +124,7 @@ export default async function AdminDonations({ searchParams }: { searchParams: S
                   <td className="p-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <a className="text-accent underline" href={`/api/receipts/${d.id}`} target="_blank" rel="noopener">PDF</a>
-                      {d.receipt && !d.receipt.cancelledAt && <CancelReceipt receiptId={d.receipt.id} number={d.receipt.number} />}
+                      {d.receipt && !d.receipt.cancelledAt && <CancelReceiptButton receiptId={d.receipt.id} number={d.receipt.number} />}
                     </div>
                   </td>
                 </tr>

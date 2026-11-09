@@ -299,7 +299,7 @@ function Results({ matches, district, lang, onRestart }: { matches: FinderMatch[
                 </li>
               ))}
             </ul>
-            <Link href={`/schemes/${m.code}?district=${district}`} className="btn-secondary justify-self-start">
+            <Link prefetch={false} href={`/schemes/${m.code}?district=${district}`} className="btn-secondary justify-self-start">
               {t.docsHow}
             </Link>
           </li>

@@ -8,7 +8,7 @@ type Props = { code: string; title: string; benefit: string; need: string; summa
 export function SchemeRow({ code, title, benefit, need, summary }: Props) {
   return (
     <li>
-      <Link href={`/schemes/${code}`} className="group -mx-2 flex items-center gap-4 rounded-xl px-2 py-4 hover:bg-paper">
+      <Link prefetch={false} href={`/schemes/${code}`} className="group -mx-2 flex items-center gap-4 rounded-xl px-2 py-4 hover:bg-paper">
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
           <NeedIcon need={need} className="size-5" />
         </span>

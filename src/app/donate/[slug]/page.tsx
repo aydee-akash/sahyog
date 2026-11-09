@@ -43,7 +43,7 @@ export default async function DonatePage({ params }: { params: Params }) {
           <p className="text-[0.95rem]">
             {t.donate.other}{" "}
             {others.map((o) => (
-              <Link key={o.slug} href={`/donate/${o.slug}`} className="text-accent underline">{lang === "en" ? o.titleEn : o.titleHi}</Link>
+              <Link prefetch={false} key={o.slug} href={`/donate/${o.slug}`} className="text-accent underline">{lang === "en" ? o.titleEn : o.titleHi}</Link>
             ))}
           </p>
         )}

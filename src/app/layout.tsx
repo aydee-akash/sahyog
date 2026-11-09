@@ -46,16 +46,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
         <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
           <nav className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2.5" aria-label={lang === "hi" ? "मुख्य" : "Main"}>
-            <Link href="/" className="flex items-center gap-2 font-[family-name:var(--font-display)] text-[1.35rem] font-semibold text-accent">
+            <Link prefetch={false} href="/" className="flex items-center gap-2 font-[family-name:var(--font-display)] text-[1.35rem] font-semibold text-accent">
               <Logo />
               {t.brand}
             </Link>
             <div className="flex items-center gap-1 text-[0.95rem]">
-              <Link href="/finder" className={`${navLink} hidden sm:block`}>{t.nav.finder}</Link>
-              <Link href="/donate" className={`${navLink} hidden font-semibold text-accent sm:block`}>{t.nav.donate}</Link>
-              {session?.role === "ADMIN" && <Link href="/admin" className={navLink}>{t.nav.admin}</Link>}
-              {session?.role === "DONOR" && <Link href="/account" className={`${navLink} hidden sm:block`}>{t.nav.account}</Link>}
-              {!session && <Link href="/login" className={`${navLink} hidden sm:block`}>{t.nav.login}</Link>}
+              <Link prefetch={false} href="/finder" className={`${navLink} hidden sm:block`}>{t.nav.finder}</Link>
+              <Link prefetch={false} href="/donate" className={`${navLink} hidden font-semibold text-accent sm:block`}>{t.nav.donate}</Link>
+              {session?.role === "ADMIN" && <Link prefetch={false} href="/admin" className={navLink}>{t.nav.admin}</Link>}
+              {session?.role === "DONOR" && <Link prefetch={false} href="/account" className={`${navLink} hidden sm:block`}>{t.nav.account}</Link>}
+              {!session && <Link prefetch={false} href="/login" className={`${navLink} hidden sm:block`}>{t.nav.login}</Link>}
               <LangSwitch lang={lang} />
               {session && (
                 <form action={logout}>

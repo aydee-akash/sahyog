@@ -66,7 +66,9 @@ npm run load-test -- 5000 50     # 5,000 donations at 50 concurrent; checks numb
 | `SESSION_SECRET` | yes | 32+ random characters; signs session cookies and guest receipt links |
 | `APP_URL` | recommended | Public base URL, used in WhatsApp share links and receipt emails |
 | `ANTHROPIC_API_KEY` | no | Turns on AI scheme drafts and AI reading of finder questions. Without it, drafts show a clear error and the finder uses its keyword reader |
-| `ANTHROPIC_MODEL` | no | Overrides the model (default `claude-sonnet-5-5`) |
+| `ANTHROPIC_MODEL` | no | Overrides the model (default `claude-haiku-5-5`) |
+| `DATABASE_URL_UNPOOLED` | for migrations | Direct Neon URL used by `prisma migrate deploy` |
+| `DNS_SERVERS` | no | Only on networks that cannot resolve the database host, e.g. `8.8.8.8,1.1.1.1` |
 | `PAYMENT_WEBHOOK_SECRET` | no | HMAC secret for `POST /api/payments/webhook` |
 | `TEST_DATABASE_URL` | tests only | Database that the tests and load test wipe and reuse |
 

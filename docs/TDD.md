@@ -65,7 +65,7 @@ Next.js 15 App Router: one deployable
    ├─ middleware          signed-cookie check for /admin and /account
    └─ src/lib             receipts · mandates · eligibility · questionParser · ai · payments · pdf · outbox · rateLimit · i18n
                                  │
-                       Anthropic API (scheme drafts for staff; reading a woman's question)
+                       Anthropic API, Claude Haiku 5.5 (scheme drafts for staff; reading a woman's question)
 ```
 
 **Why this shape:**
@@ -153,8 +153,8 @@ The official notice sits beside editable Hindi and English tabs. "AI draft" fill
 
 | Use | Model call | When it is wrong or unsure |
 |---|---|---|
-| Scheme summary drafts (staff) | Forced tool call → Hindi + English fields + `notFound[]` | Only a draft, badged "AI ड्राफ़्ट" (AI draft), next to the source notice. It cannot be published without a human approving it (server-enforced). Missing facts are listed for the editor |
-| Reading a woman's question | Forced tool call → partial answers, `null` if not stated | Every value is shown back for her to confirm or change before matching. The fixed rules engine decides eligibility, never the model |
+| Scheme summary drafts (staff) | Structured output (`output_config.format`, zod schema) → Hindi + English fields + `notFound[]` | Only a draft, badged "AI ड्राफ़्ट" (AI draft), next to the source notice. It cannot be published without a human approving it (server-enforced). Missing facts are listed for the editor |
+| Reading a woman's question | Structured output → partial answers, `null` if not stated | Every value is shown back for her to confirm or change before matching. The fixed rules engine decides eligibility, never the model |
 | Both: API down, timeout, bad output or no key | 15–30 s timeout, 1 retry, zod validation | Drafts: a clear Hindi error and the editor writes by hand. Finder: falls back to the keyword reader and says so. Failures are audit-logged |
 | Public over-trust | — | Source link + last-checked date on every scheme; "possible, not a promise" wording; helpline call-back |
 
@@ -250,7 +250,10 @@ The design starts from the women's own world, not from a template.
 
 - **Hindi inside the PDF.** pdf-lib can't shape Devanagari, so the certificate is in English. Next: HTML → PDF with headless Chromium and Noto Sans Devanagari, on a worker.
 - **Real gateway, email/SMS and scheduler.** Each sits behind one function (§3). Next: Razorpay subscriptions and webhooks, an email provider, and a daily cron calling `runDueInstalments`.
-- **AI tested only without a live key.** The fallback paths are tested. With a key, the next step is a small evaluation set of real (anonymised) Hindi questions to measure how accurately answers are extracted.
+- **AI: tested live on Claude Haiku 5.5** (cheapest current model). Hindi, Hinglish and "not sure" answers were extracted correctly in 1–2 s, and "मदद चाहिए" ("I need help") filled nothing; a scheme draft takes about 4 s. Next: a small evaluation set of real (anonymised) questions to measure accuracy.
+- **Database is Neon (Singapore).** The office network's DNS cannot resolve `*.neon.tech`, so on that laptop the app looks the host up through public DNS (`DNS_SERVERS`); TLS still verifies the real hostname. Not needed when deployed.
+- **No global loading skeleton.** A root `loading.tsx` made page updates after a server action hang whenever the database answered slowly (found in testing on Neon: receipt cancel and the language switch failed every time). Removing it fixed both. Buttons show their own pending states.
+- **`npm audit`:** the remaining findings are in build-time tools (Next's CSS processor, the Prisma CLI). The runtime validation library (zod) was upgraded to v4.6.7 to fix its finding.
 - **Server validation messages are Hindi-only** even in English mode. Next: move them into the dictionary.
 - **Static pages CMS and scheme version history with diffs** are not built. Today an edit returns a scheme to Draft, which takes it offline until it is re-approved.
 - **Admin links have prefetch turned off.** Next.js prefetching sometimes cancelled navigation on the heavier admin pages in testing. Turning it off fixed it (5 of 5 runs, versus 2 of 4 before) at the cost of a few ms per admin click.

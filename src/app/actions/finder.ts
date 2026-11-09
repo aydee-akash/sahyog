@@ -67,7 +67,7 @@ const callbackSchema = z.object({
   phone: z.string().trim().regex(/^[6-9]\d{9}$/, "10 अंकों का मोबाइल नंबर लिखें"),
   district: z.enum(districtKeys),
   schemeCodes: z.array(z.string().max(20)).max(20),
-  consent: z.literal(true, { errorMap: () => ({ message: "कॉल के लिए सहमति ज़रूरी है" }) }),
+  consent: z.literal(true, { error: "कॉल के लिए सहमति ज़रूरी है" }),
 });
 
 export async function requestCallback(input: unknown): Promise<{ ok: boolean; error?: string }> {

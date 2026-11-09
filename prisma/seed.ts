@@ -1,13 +1,13 @@
 // Seed data. SCH-014/022/031 come from the brief's sample table; the rest are
 // ILLUSTRATIVE schemes written for this demo (labelled in the TDD). Notice
 // texts are mock "official notices" so the AI drafting can be exercised.
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { confirmPayment } from "../src/lib/receipts";
+import { createPrisma } from "../src/lib/db";
 import { addMonth } from "../src/lib/dates";
 
-const prisma = new PrismaClient();
+const prisma = createPrisma();
 const src = (code: string) => `https://notices.example.org/mp/${code.toLowerCase()}`;
 
 const schemes = [

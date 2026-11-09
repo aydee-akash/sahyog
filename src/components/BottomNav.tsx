@@ -21,7 +21,7 @@ export function BottomNav({ lang, loggedIn }: { lang: Lang; loggedIn: boolean })
       <ul className="grid grid-cols-4">
         {items.map(({ href, label, Icon, active }) => (
           <li key={href}>
-            <Link
+            <Link prefetch={false}
               href={href}
               aria-current={active ? "page" : undefined}
               className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[0.75rem] ${active ? "font-semibold text-accent" : "text-muted"}`}

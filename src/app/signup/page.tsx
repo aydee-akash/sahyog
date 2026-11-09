@@ -17,7 +17,7 @@ export default async function SignupPage() {
       </div>
       <SignupForm lang={lang} />
       <p className="text-center">
-        {t.signup.have} <Link href="/login" className="font-semibold text-accent underline">{t.login.title}</Link>
+        {t.signup.have} <Link prefetch={false} href="/login" className="font-semibold text-accent underline">{t.login.title}</Link>
       </p>
     </div>
   );

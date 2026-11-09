@@ -57,7 +57,7 @@ export default async function Success({ params, searchParams }: Props) {
       </div>
 
       {!session && (
-        <Link href="/signup" className="card flex items-center gap-3 p-4 hover:border-accent">
+        <Link prefetch={false} href="/signup" className="card flex items-center gap-3 p-4 hover:border-accent">
           <UserPlus className="size-6 shrink-0 text-accent" aria-hidden />
           <span className="font-semibold">{t.success.signup}</span>
         </Link>
@@ -67,8 +67,8 @@ export default async function Success({ params, searchParams }: Props) {
         <a href={`https://wa.me/?text=${encodeURIComponent(share)}`} target="_blank" rel="noopener noreferrer" className="btn-secondary">
           <MessageCircle className="size-5" aria-hidden /> {t.success.share}
         </a>
-        {session?.role === "DONOR" && <Link href="/account" className="btn-secondary">{t.success.all}</Link>}
-        <Link href="/" className="btn-ghost">{t.success.home}</Link>
+        {session?.role === "DONOR" && <Link prefetch={false} href="/account" className="btn-secondary">{t.success.all}</Link>}
+        <Link prefetch={false} href="/" className="btn-ghost">{t.success.home}</Link>
       </div>
     </div>
   );

@@ -49,7 +49,7 @@ export default async function Home({ searchParams }: { searchParams: Search }) {
         </div>
         <div className="grid gap-2">
           <AskBox lang={lang} />
-          <Link href="/finder" className="inline-flex min-h-11 items-center gap-2 justify-self-start px-1 font-semibold text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
+          <Link prefetch={false} href="/finder" className="inline-flex min-h-11 items-center gap-2 justify-self-start px-1 font-semibold text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
             <ListChecks className="size-5" aria-hidden /> {t.home.orQuestions}
           </Link>
         </div>
@@ -72,11 +72,11 @@ export default async function Home({ searchParams }: { searchParams: Search }) {
         </div>
 
         <div className="flex flex-wrap gap-2" role="list" aria-label={t.home.byNeed}>
-          <Link role="listitem" href={link()} className={`chip ${!validNeed ? "chip-on" : ""}`} aria-current={!validNeed ? "true" : undefined}>
+          <Link prefetch={false} role="listitem" href={link()} className={`chip ${!validNeed ? "chip-on" : ""}`} aria-current={!validNeed ? "true" : undefined}>
             {t.home.all}
           </Link>
           {NEEDS.map((n) => (
-            <Link
+            <Link prefetch={false}
               role="listitem"
               key={n.key}
               href={link(n.key)}
@@ -94,7 +94,7 @@ export default async function Home({ searchParams }: { searchParams: Search }) {
             <p className="text-lg font-semibold">{validDistrict ? t.home.emptyIn(districtLabel(validDistrict, lang)) : t.home.empty}</p>
             <p className="text-muted">{t.home.emptyHint}</p>
             <div className="flex flex-wrap gap-2">
-              <Link href="/#schemes" className="btn-secondary">{t.home.seeAll}</Link>
+              <Link prefetch={false} href="/#schemes" className="btn-secondary">{t.home.seeAll}</Link>
               <a href={`tel:${TRUST.helpline.replace(/\D/g, "")}`} className="btn-ghost"><PhoneCall className="size-5" aria-hidden /> {TRUST.helpline}</a>
             </div>
           </div>
@@ -139,7 +139,7 @@ export default async function Home({ searchParams }: { searchParams: Search }) {
                   </p>
                   <p className="text-[0.9rem] text-muted">{t.home.goal} {formatINR(c.goal)}</p>
                 </div>
-                <Link href={`/donate/${c.slug}`} className="btn-primary justify-self-start">{t.nav.donate}</Link>
+                <Link prefetch={false} href={`/donate/${c.slug}`} className="btn-primary justify-self-start">{t.nav.donate}</Link>
               </article>
             );
           })}

@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </div>
       <LoginForm next={next} lang={lang} />
       <p className="text-center">
-        {t.login.noAccount} <Link href="/signup" className="font-semibold text-accent underline">{t.login.signup}</Link>
+        {t.login.noAccount} <Link prefetch={false} href="/signup" className="font-semibold text-accent underline">{t.login.signup}</Link>
       </p>
       <div className="card p-4 text-[0.9rem] text-muted">
         <p className="font-semibold text-ink">{t.login.demo}</p>
