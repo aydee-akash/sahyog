@@ -1,28 +1,31 @@
 # सहयोग (Sahyog): women's schemes finder + 80G donations
 
-A Hindi-first site for a Bhopal women's-welfare trust. Women and field workers find the government schemes they can use. Donors give in three steps and get an 80G receipt instantly. The trust edits scheme pages through an AI-drafted, human-reviewed workflow.
+A Hindi-first site for a Bhopal women's-welfare trust. Women type or speak their situation and see the government schemes they may qualify for. Donors give in three steps and get an 80G receipt instantly, once or every month. Trust staff run schemes, campaigns, receipts and call-backs from one admin.
 
 - **Design doc:** [docs/TDD.md](docs/TDD.md)
-- **Run and deploy:** [deployment.md](deployment.md)
+- **Run, deploy and demo logins:** [deployment.md](deployment.md)
 
-## What works
-- **Home page:** published schemes, filterable by need and district, in large-type Hindi
-- **Scheme page:** benefits, documents, how to apply, nearest help centre, official source link and last-checked date
-- **Eligibility finder:** 6 questions. Shows *possible* matches with the rules it checked, plus a consented call-back request
-- **Donation in 3 steps:** one-time or monthly, PAN capture, mock gateway (test UPI and cards; foreign cards are blocked with an FCRA notice)
-- **Instant receipt:** gapless, per-financial-year receipt number and 80G PDF
-- **Donor account:** history and certificate downloads
+## Highlights
+- **AI finder.** Type or speak in Hindi. AI (with a keyword fallback) turns the message into answers she confirms; a fixed rules engine shows *possible* matches and the rules it checked.
+- **Scheme pages.** Benefits, documents, how to apply, nearest help centre, source link and last-checked date. Read aloud, WhatsApp share, Hindi/English.
+- **Donations.** One-time or monthly (pause, resume, stop), PAN capture, FCRA foreign-card block, instant 80G PDF, receipt email (mocked).
+- **Receipt engine.** Gapless per-financial-year numbering, idempotent under retries; tested with 5,000 donations in under 2 s. Cancelled receipts keep their number.
 - **Admin:**
-  - scheme CMS: AI drafts plain-Hindi summaries from the official notice → an editor checks them → Draft → In review → Published, with an audit log
-  - donations by campaign
-  - Form 10BD CSV export
+  - dashboard
+  - scheme CMS with AI Hindi + English drafts and Draft → Review → Publish
+  - campaigns
+  - donations search and cancellation
+  - Form 10BD CSV
+  - call-back inbox
+  - mock email outbox
+  - audit log
+- **Quality:**
+  - 29 tests (unit + Postgres integration)
+  - load test
+  - axe: no WCAG 2.1 A/AA violations on key screens
+  - login rate limit
+  - verified sign-up
+  - no trackers
 
 ## Stack
-Next.js 15 (App Router, server-rendered), TypeScript, Tailwind v4, Postgres + Prisma, `jose` sessions, `pdf-lib`, Anthropic API, Vitest.
-
-## Tests
-`npm test` covers:
-- eligibility rules
-- PAN, amount and financial-year validation
-- the mock gateway
-- an integration test: 200 concurrent payment confirmations produce 200 unique, gapless receipt numbers, and replayed confirmations stay idempotent
+Next.js 15 (App Router, server-rendered) · TypeScript · Tailwind v4 · Lucide icons · Postgres + Prisma · `jose` sessions · `pdf-lib` · Anthropic API · Vitest.
