@@ -1,14 +1,14 @@
 import { Mail, MessageSquare } from "lucide-react";
 import { prisma } from "@/lib/db";
 
-export const metadata = { title: "आउटबॉक्स · एडमिन" };
+export const metadata = { title: "आउटबॉक्स | एडमिन" };
 
 export default async function Outbox() {
   const messages = await prisma.outbox.findMany({ orderBy: { createdAt: "desc" }, take: 50 });
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="text-[1.75rem] font-bold">आउटबॉक्स (मॉक)</h1>
+        <h1 className="text-[1.75rem]">आउटबॉक्स (मॉक)</h1>
         <p className="text-muted">
           डेमो में ईमेल और SMS असल में नहीं भेजे जाते। सिस्टम जो भी संदेश भेजता (रसीद, मासिक दान, साइन-अप कोड), वह यहाँ दिखता है। असली सिस्टम में यही जगह ईमेल/SMS सेवा से जुड़ेगी।
         </p>

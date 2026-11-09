@@ -117,8 +117,8 @@ export function Editor({ scheme, log }: Props) {
     <div className="grid gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[0.9rem] text-muted">{scheme.code} · {STATUS_HI[status]}{scheme.reviewedBy ? ` · स्वीकृत: ${scheme.reviewedBy}` : ""}</p>
-          <h1 className="text-[1.75rem] font-bold">{c.titleHi}</h1>
+          <p className="text-[0.9rem] text-muted">{scheme.code}, {STATUS_HI[status]}{scheme.reviewedBy ? `, स्वीकृत: ${scheme.reviewedBy}` : ""}</p>
+          <h1 className="text-[1.75rem]">{c.titleHi}</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           {status === "DRAFT" && (
@@ -154,7 +154,7 @@ export function Editor({ scheme, log }: Props) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section aria-labelledby="notice-h" className="card grid content-start gap-3 p-5 lg:sticky lg:top-4 lg:self-start">
-          <h2 id="notice-h" className="text-lg font-bold">आधिकारिक सूचना (स्रोत)</h2>
+          <h2 id="notice-h" className="text-lg">आधिकारिक सूचना (स्रोत)</h2>
           <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="break-all text-[0.9rem] text-accent underline">{c.sourceUrl}</a>
           <textarea
             value={c.noticeText}
@@ -259,13 +259,13 @@ export function Editor({ scheme, log }: Props) {
       </div>
 
       <section aria-labelledby="log-h" className="grid gap-2">
-        <h2 id="log-h" className="text-lg font-bold">गतिविधि</h2>
+        <h2 id="log-h" className="text-lg">गतिविधि</h2>
         {log.length === 0 ? (
           <p className="text-muted">अभी कोई गतिविधि नहीं।</p>
         ) : (
           <ul className="text-[0.9rem] text-muted">
             {log.map((l) => (
-              <li key={l.id}>{new Date(l.at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} · {l.actor} · {l.action}</li>
+              <li key={l.id}>{new Date(l.at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}: {l.action} ({l.actor})</li>
             ))}
           </ul>
         )}
@@ -308,7 +308,7 @@ function NumberField({ label, value, onChange }: { label: string; value?: number
 function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (on: boolean) => void }) {
   return (
     <label className="flex min-h-11 items-center gap-2">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-5 accent-[#8a3b12]" />
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-5 accent-[#26346e]" />
       {label}
     </label>
   );

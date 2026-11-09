@@ -16,7 +16,7 @@ export function CancelReceipt({ receiptId, number }: { receiptId: string; number
       <button type="button" onClick={() => ref.current?.showModal()} className="text-bad underline">रद्द करें</button>
       <dialog ref={ref} className="m-auto w-[min(92vw,28rem)] rounded-2xl p-0 backdrop:bg-black/40">
         <form action={action} className="grid gap-3 p-5">
-          <h2 className="text-lg font-bold">रसीद {number} रद्द करें?</h2>
+          <h2 className="text-lg">रसीद {number} रद्द करें?</h2>
           <p className="text-[0.95rem] text-muted">नंबर बना रहेगा और दोबारा इस्तेमाल नहीं होगा। PDF पर &ldquo;CANCELLED&rdquo; लिखा जाएगा और यह Form 10BD में नहीं जाएगी।</p>
           <input type="hidden" name="receiptId" value={receiptId} />
           <label className="grid gap-1">

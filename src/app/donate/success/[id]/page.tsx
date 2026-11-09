@@ -10,7 +10,7 @@ import { getSession } from "@/lib/auth";
 import { getT } from "@/lib/lang";
 import { addMonth } from "@/lib/dates";
 
-export const metadata = { title: "धन्यवाद · Thank you" };
+export const metadata = { title: "धन्यवाद / Thank you" };
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ t?: string }> };
 
@@ -31,7 +31,7 @@ export default async function Success({ params, searchParams }: Props) {
         <span className="grid size-16 place-items-center rounded-full bg-ok-soft text-ok ring-8 ring-ok-soft/50">
           <CheckIcon className="size-9" />
         </span>
-        <h1 className="text-[2rem] font-bold leading-tight">{t.success.thanks(donation.donorName.split(" ")[0])}</h1>
+        <h1 className="text-[2rem] leading-tight">{t.success.thanks(donation.donorName.split(" ")[0])}</h1>
         <p className="text-lg text-muted">{t.success.received(formatINR(donation.amount), campaignTitle)}</p>
       </div>
 

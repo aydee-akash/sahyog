@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { formatINR } from "@/lib/money";
 import { CampaignForm } from "./CampaignForm";
 
-export const metadata = { title: "अभियान · एडमिन" };
+export const metadata = { title: "अभियान | एडमिन" };
 
 export default async function Campaigns() {
   const [campaigns, sums] = await Promise.all([
@@ -13,7 +13,7 @@ export default async function Campaigns() {
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="text-[1.75rem] font-bold">अभियान</h1>
+        <h1 className="text-[1.75rem]">अभियान</h1>
         <p className="text-muted">हर अभियान का अपना दान पेज होता है: /donate/slug। बंद अभियान होम पेज से हट जाते हैं, पुराने दान और रसीदें बनी रहती हैं।</p>
       </div>
       {campaigns.map((c) => (
@@ -23,7 +23,7 @@ export default async function Campaigns() {
               <span className="font-semibold">{c.titleHi}</span> <span className="text-muted">/ {c.titleEn}</span>
               <span className={`badge ml-2 ${c.active ? "bg-ok-soft text-ok" : "bg-line text-muted"}`}>{c.active ? "चालू" : "बंद"}</span>
             </span>
-            <span className="text-[0.9rem] text-muted">{formatINR(raised[c.id] ?? 0)} / {formatINR(c.goal)} · बदलें ▾</span>
+            <span className="text-[0.9rem] text-muted">{formatINR(raised[c.id] ?? 0)} / {formatINR(c.goal)}, बदलें ▾</span>
           </summary>
           <div className="border-t border-line p-4">
             <CampaignForm campaign={c} />
@@ -31,7 +31,7 @@ export default async function Campaigns() {
         </details>
       ))}
       <section className="card grid gap-3 p-4" aria-labelledby="new-h">
-        <h2 id="new-h" className="text-lg font-bold">+ नया अभियान</h2>
+        <h2 id="new-h" className="text-lg">+ नया अभियान</h2>
         <CampaignForm />
       </section>
     </div>

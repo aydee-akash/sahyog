@@ -1,33 +1,47 @@
 @import "tailwindcss";
 
 /* Warm, restrained palette. All text/background pairs meet WCAG 2.1 AA. */
+/* Neel (indigo dye) and haldi (turmeric, the BPL ration-card yellow) on plain
+   white. Colour carries meaning: haldi = her own words / AI, green = a match or
+   a payment, red = a problem. All text pairs meet WCAG 2.1 AA. */
 @theme {
-  --color-paper: #fbf8f3;
+  --color-paper: #f5f6fa;
   --color-card: #ffffff;
-  --color-ink: #1f2328;
-  --color-muted: #5b5f66;
-  --color-line: #e7e0d6;
-  --color-accent: #8a3b12;
-  --color-accent-strong: #6f2e0c;
-  --color-accent-soft: #f6ebe0;
-  --color-ok: #166534;
-  --color-ok-soft: #e8f3ec;
-  --color-warn: #8a5a00;
-  --color-warn-soft: #fbf1dc;
-  --color-bad: #a1261d;
+  --color-ink: #1b2140;
+  --color-muted: #565d6e;
+  --color-line: #dadde7;
+  --color-accent: #26346e;
+  --color-accent-strong: #1a2550;
+  --color-accent-soft: #e9ecf7;
+  --color-haldi: #f2b705;
+  --color-haldi-soft: #fff4cc;
+  --color-ok: #256b42;
+  --color-ok-soft: #e6f2ea;
+  --color-warn: #6b4a00;
+  --color-warn-soft: #fff4cc;
+  --color-bad: #b4322a;
   --color-bad-soft: #fbe9e7;
   --font-sans: var(--font-mukta), system-ui, sans-serif;
+  --font-display: var(--font-eczar), var(--font-mukta), serif;
 }
 
 html {
   font-size: 18px;
 }
 body {
-  background: var(--color-paper);
+  background: #ffffff;
   color: var(--color-ink);
   font-family: var(--font-sans);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
 }
 
 :focus-visible {
@@ -76,15 +90,13 @@ body {
   @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-semibold;
 }
 
-/* AI surfaces: a warm-to-violet gradient edge marks anything the AI touches. */
+/* Her own words / AI: a solid haldi edge, never a gradient. */
 @utility ai-ring {
-  border: 1.5px solid transparent;
-  background:
-    linear-gradient(var(--color-card), var(--color-card)) padding-box,
-    linear-gradient(120deg, #8a3b12, #c2410c 45%, #7c3aed) border-box;
+  border: 2px solid var(--color-haldi);
+  background: var(--color-card);
 }
 @utility ai-badge {
-  @apply inline-flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-0.5 text-[0.8rem] font-semibold text-violet-800;
+  @apply inline-flex items-center gap-1 rounded-full border border-haldi bg-haldi-soft px-2.5 py-0.5 text-[0.8rem] font-semibold text-ink;
 }
 @utility fade-up {
   animation: fade-up 0.35s ease-out both;

@@ -92,7 +92,7 @@ export function DonateFlow({ lang, campaignSlug, prefill }: Props) {
   );
 
   return (
-    <div className="card grid gap-6 p-5 sm:p-6">
+    <div className="grid gap-6 rounded-2xl border border-line p-5 sm:p-6">
       <ol className="flex gap-2 text-[0.9rem]" aria-label={t.stepsLabel}>
         {t.steps.map((s, i) => (
           <li key={s} className="flex flex-1 flex-col gap-1.5" aria-current={i === step ? "step" : undefined}>
@@ -211,7 +211,7 @@ export function DonateFlow({ lang, campaignSlug, prefill }: Props) {
               <label htmlFor="card" className="label">{t.cardNo}</label>
               <input id="card" inputMode="numeric" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} className="input" autoComplete="cc-number" />
               <p className="mt-1 text-[0.9rem] text-muted">
-                {t.test} {t.indian} <code>{TEST_CARDS.success}</code> · {t.declined} <code>{TEST_CARDS.declined}</code> · {t.foreign} <code>{TEST_CARDS.foreign}</code>
+                {t.test} {t.indian} <code>{TEST_CARDS.success}</code>, {t.declined} <code>{TEST_CARDS.declined}</code>, {t.foreign} <code>{TEST_CARDS.foreign}</code>
               </p>
             </div>
           )}

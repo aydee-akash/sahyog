@@ -160,19 +160,41 @@ The official notice sits beside editable Hindi and English tabs. "AI draft" fill
 
 ## 7. UI and design decisions
 
-- **Hindi first, one tap to English.** Large Mukta type (18 px base). Every public screen and all scheme and campaign content is bilingual (the choice is kept in a cookie). Admin screens are Hindi with English hints in the sidebar.
-- **Warm, restrained palette.** Paper `#fbf8f3` and a single terracotta accent `#8a3b12`. No photos, per the brief. Icons are Lucide line icons. The logo is two hands holding a sprout, as inline SVG.
-- **AI has its own visual signal.** A thin warm-to-violet gradient edge and a ✦ AI badge mark only what the AI touched (ask box, understood answers), so staff and women always know what to double-check.
+The design starts from the women's own world, not from a template.
+
+- **Colour (4 + 2):**
+  - **neel indigo** `#26346E`: indigo dyeing is an Indian textile tradition; used for text, headings and buttons
+  - **haldi yellow** `#F2B705`: turmeric, and the colour of the BPL ration card these women carry
+  - **white** page, with `#F5F6FA` for quiet panels
+  - **green** `#256B42` only means "matches" or "paid"
+  - **red** `#B4322A` only means a problem
+  - Colour carries meaning, so haldi always marks *her own words / AI*.
+- **Type:** **Eczar** for headings, a typeface designed for Devanagari with a sturdy printed feel. **Mukta** for body text (18 px base, line-height 1.6). Two clearly different families, each with one job.
+- **One bold element:** the haldi "अपनी बात लिखें या बोलें" (type or speak your situation) card on the home page. Everything around it is quiet.
+- **A register, not a brochure:** schemes are a list with rows and dividers, like a ration register. Each row shows the scheme name, then what she gets in indigo, then one line of why. Cards appear only where a block really is one object (a campaign).
+- **Headline as a question in her voice:** "आपके लिए कौन सी सरकारी योजना है?" (Which government scheme is for you?), in one colour, with no label above it.
+- **Hindi first, two-option language switch:** **हिंदी | English** is always visible in the header with the current language highlighted. It is a plain form post, so it works before JavaScript loads, and the choice is remembered on every page.
 - **Phone first:**
-  - a bottom tab bar (Home, Find, Donate, Account) one thumb away
+  - bottom tab bar
   - sticky header
   - buttons at least 44–56 px
   - one question per screen
-  - an app manifest so the site can be added to the home screen
+  - no horizontal scrolling on any page at 375 px (checked automatically, in Hindi and English)
+  - app manifest
 - **For low literacy:** read aloud with the phone's own Hindi voice, WhatsApp share, tap-to-call help centres.
-- **Donating stays at 3 steps,** with a visible stepper, amount presets, the amount on the pay button, and a lock note.
-- **States everywhere:** skeleton loading, Hindi/English error page with retry, not-found, empty states (district with no scheme, no donations, no call-backs, empty outbox), pending labels on every button.
-- **Accessibility, verified:** axe-core reports **no WCAG 2.1 A/AA violations** on home, finder results, scheme, donate, account and the admin dashboard, donations, call-backs and outbox pages. Also built in: skip link, focus rings, labelled inputs with `aria-invalid`, live regions, and reduced-motion support.
+- **Motion only answers an action:** a result, the next question or a confirmation fades in. Nothing animates on its own, and reduced-motion settings are respected.
+- **Copy:** plain verbs, and buttons say what happens ("योजनाएँ खोजें" find schemes, "₹1,000 दान करें" donate ₹1,000). An empty search shows a hint instead of a disabled button.
+- **Generic defaults I deliberately removed:**
+  - a cream-and-terracotta palette
+  - a coloured phrase inside the headline
+  - labels above headings
+  - stats strips
+  - gradient and "AI glow" effects
+  - arrows appended to buttons
+  - "A · B" separators
+  - a grid of identical cards
+- **States everywhere:** skeleton loading, a bilingual error page with retry, not-found, empty states, and pending labels on every button.
+- **Accessibility, verified:** axe-core reports **no WCAG 2.1 A/AA violations** on home, finder results, scheme, donate, account and the admin dashboard, donations, call-backs and outbox pages. Also built in: skip link, focus rings, labelled inputs with `aria-invalid`, live regions.
 
 ## 8. Security and privacy
 

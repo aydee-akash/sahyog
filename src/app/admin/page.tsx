@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { BookOpenText, CalendarClock, HandCoins, PhoneCall, ReceiptIndianRupee, Search, Sparkles, Users } from "lucide-react";
+import { BookOpenText, CalendarClock, HandCoins, PhoneCall, ReceiptIndianRupee, Search, Users } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { financialYear } from "@/lib/fy";
 import { formatINR } from "@/lib/money";
 import { RunMonthly } from "./RunMonthly";
 
-export const metadata = { title: "डैशबोर्ड · एडमिन" };
+export const metadata = { title: "डैशबोर्ड | एडमिन" };
 export const dynamic = "force-dynamic";
 
 const DAY = 86_400_000;
@@ -58,7 +58,7 @@ export default async function Dashboard() {
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="text-[1.75rem] font-bold">डैशबोर्ड</h1>
+        <h1 className="text-[1.75rem]">डैशबोर्ड</h1>
         <p className="text-muted">हर रसीद, 80G प्रमाण पत्र और रिमाइंडर अपने-आप बनता है।</p>
       </div>
 
@@ -74,8 +74,8 @@ export default async function Dashboard() {
 
       <section className="card grid gap-4 p-5" aria-labelledby="chart-h">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="chart-h" className="text-lg font-bold">पिछले 14 दिन का दान</h2>
-          <span className="text-[0.9rem] text-muted">{formatINR(days.reduce((s, d) => s + d.total, 0))} · {days.reduce((s, d) => s + d.count, 0)} दान</span>
+          <h2 id="chart-h" className="text-lg">पिछले 14 दिन का दान</h2>
+          <span className="text-[0.9rem] text-muted">{formatINR(days.reduce((s, d) => s + d.total, 0))}, {days.reduce((s, d) => s + d.count, 0)} दान</span>
         </div>
         <div className="flex h-44 items-end gap-1.5" role="img" aria-label="पिछले 14 दिन के दान का बार चार्ट">
           {days.map((d) => (
@@ -97,7 +97,7 @@ export default async function Dashboard() {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <section className="card grid content-start gap-3 p-5" aria-labelledby="monthly-h">
-          <h2 id="monthly-h" className="flex items-center gap-2 text-lg font-bold"><HandCoins className="size-5 text-accent" aria-hidden /> मासिक दान चलाएँ (टेस्ट)</h2>
+          <h2 id="monthly-h" className="flex items-center gap-2 text-lg"><HandCoins className="size-5 text-accent" aria-hidden /> मासिक दान चलाएँ (टेस्ट)</h2>
           <p className="text-muted">
             असली सिस्टम में यह रोज़ अपने-आप चलता है। अभी {dueMandates} मासिक दान की किस्त बाकी है। हर किस्त की नई रसीद और ईमेल बनेगा; दोबारा चलाने पर दोहरा चार्ज नहीं होगा।
           </p>
@@ -105,7 +105,7 @@ export default async function Dashboard() {
         </section>
 
         <section className="card grid content-start gap-3 p-5" aria-labelledby="finder-h">
-          <h2 id="finder-h" className="flex items-center gap-2 text-lg font-bold"><Sparkles className="size-5 text-violet-700" aria-hidden /> खोजक कैसे इस्तेमाल हुआ (30 दिन)</h2>
+          <h2 id="finder-h" className="flex items-center gap-2 text-lg"><Search className="size-5 text-accent" aria-hidden /> खोजक कैसे इस्तेमाल हुआ (30 दिन)</h2>
           {finderVia.length === 0 ? (
             <p className="text-muted">अभी कोई उपयोग नहीं।</p>
           ) : (
@@ -114,7 +114,7 @@ export default async function Dashboard() {
                 <li key={v.via} className="grid gap-1">
                   <span className="flex justify-between text-[0.95rem]"><span>{viaLabel[v.via] ?? v.via}</span><strong>{v._count}</strong></span>
                   <span className="h-2 overflow-hidden rounded-full bg-paper ring-1 ring-line">
-                    <span className="block h-full rounded-full bg-violet-600/80" style={{ width: `${(v._count / finder) * 100}%` }} />
+                    <span className="block h-full rounded-full bg-haldi" style={{ width: `${(v._count / finder) * 100}%` }} />
                   </span>
                 </li>
               ))}
@@ -125,12 +125,12 @@ export default async function Dashboard() {
       </div>
 
       <section className="grid gap-2" aria-labelledby="log-h">
-        <h2 id="log-h" className="text-lg font-bold">हाल की गतिविधि</h2>
+        <h2 id="log-h" className="text-lg">हाल की गतिविधि</h2>
         <ul className="card divide-y divide-line text-[0.9rem]">
           {log.map((l) => (
             <li key={l.id} className="flex flex-wrap justify-between gap-2 px-4 py-2.5">
-              <span><strong>{l.action}</strong> · {l.entity}{l.detail ? ` · ${l.detail}` : ""}</span>
-              <span className="text-muted">{l.actor} · {l.createdAt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "short", timeStyle: "short" })}</span>
+              <span><strong>{l.action}</strong> ({l.entity}){l.detail ? `: ${l.detail}` : ""}</span>
+              <span className="text-muted">{l.actor}, {l.createdAt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "short", timeStyle: "short" })}</span>
             </li>
           ))}
         </ul>

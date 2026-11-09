@@ -6,7 +6,7 @@ import { formatDateHi } from "@/lib/content";
 import { financialYear } from "@/lib/fy";
 import { CancelReceipt } from "./CancelReceipt";
 
-export const metadata = { title: "दान और रसीदें · एडमिन" };
+export const metadata = { title: "दान और रसीदें | एडमिन" };
 
 type Search = Promise<{ campaign?: string; q?: string; freq?: string }>;
 
@@ -43,7 +43,7 @@ export default async function AdminDonations({ searchParams }: { searchParams: S
     <div className="grid gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[1.75rem] font-bold">दान और रसीदें</h1>
+          <h1 className="text-[1.75rem]">दान और रसीदें</h1>
           <p className="text-muted">हर रसीद अपने-आप बनती है। रद्द रसीद का नंबर दोबारा इस्तेमाल नहीं होता।</p>
         </div>
         <a href={`/api/admin/form10bd?fy=${fy}`} className="btn-secondary"><Download className="size-4" aria-hidden /> Form 10BD CSV ({fy})</a>
@@ -57,7 +57,7 @@ export default async function AdminDonations({ searchParams }: { searchParams: S
               <span className="font-semibold">{c.titleHi}</span>
               <span className="text-2xl font-bold">{formatINR(raised)}</span>
               <span className="h-1.5 overflow-hidden rounded-full bg-accent-soft"><span className="block h-full bg-accent" style={{ width: `${Math.min(100, (raised / c.goal) * 100)}%` }} /></span>
-              <span className="text-[0.85rem] text-muted">{byId[c.id]?._count ?? 0} दान · लक्ष्य {formatINR(c.goal)}</span>
+              <span className="text-[0.85rem] text-muted">{byId[c.id]?._count ?? 0} दान, लक्ष्य {formatINR(c.goal)}</span>
             </a>
           );
         })}

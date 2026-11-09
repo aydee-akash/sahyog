@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import type { Rules } from "@/lib/eligibility";
 import { Editor } from "./Editor";
 
-export const metadata = { title: "योजना संपादित करें · एडमिन" };
+export const metadata = { title: "योजना संपादित करें | एडमिन" };
 
 export default async function EditScheme({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();

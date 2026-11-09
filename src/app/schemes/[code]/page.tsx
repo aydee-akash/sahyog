@@ -42,8 +42,8 @@ export default async function SchemePage({ params, searchParams }: { params: Par
 
   const Section = ({ id, icon, heading, children }: { id: string; icon: React.ReactNode; heading: string; children: React.ReactNode }) => (
     <section aria-labelledby={id} className="grid gap-3">
-      <h2 id={id} className="flex items-center gap-2 text-xl font-bold">
-        <span className="grid size-8 place-items-center rounded-full bg-accent-soft text-accent">{icon}</span>
+      <h2 id={id} className="flex items-center gap-2 text-[1.35rem]">
+        <span className="text-accent">{icon}</span>
         {heading}
       </h2>
       {children}
@@ -56,11 +56,11 @@ export default async function SchemePage({ params, searchParams }: { params: Par
         <Link href={`/?need=${scheme.need}#schemes`} className="inline-flex items-center gap-2 text-[0.95rem] text-accent">
           <NeedIcon need={scheme.need} className="size-5" /> {needLabel(scheme.need, lang)}
         </Link>
-        <h1 className="text-[2rem] font-bold leading-tight">{title}</h1>
+        <h1 className="text-[2.1rem] leading-tight">{title}</h1>
         <p className="text-lg text-muted">{summary}</p>
-        <div className="card mt-2 border-accent/30 bg-gradient-to-br from-accent-soft to-card p-5">
+        <div className="mt-2 rounded-xl bg-accent-soft p-5">
           <p className="text-[0.95rem] text-muted">{t.scheme.mayGet}</p>
-          <p className="text-2xl font-bold text-accent-strong">{benefit}</p>
+          <p className="font-[family-name:var(--font-display)] text-[1.7rem] font-semibold leading-tight text-accent">{benefit}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <ListenButton text={spoken} lang={lang} labels={{ listen: t.scheme.listen, stop: t.scheme.stop }} />
@@ -70,7 +70,7 @@ export default async function SchemePage({ params, searchParams }: { params: Par
         </div>
       </div>
 
-      <Section id="who" icon={<UsersRound className="size-4" aria-hidden />} heading={t.scheme.who}>
+      <Section id="who" icon={<UsersRound className="size-5" aria-hidden />} heading={t.scheme.who}>
         <p>{eligibility}</p>
         {scheme.districts.length > 0 && (
           <p className="text-muted">{t.scheme.onlyIn} {scheme.districts.map((d) => districtLabel(d, lang)).join(", ")}</p>
@@ -78,10 +78,10 @@ export default async function SchemePage({ params, searchParams }: { params: Par
         <Link href="/finder" className="btn-ghost justify-self-start px-2"><ListChecks className="size-5" aria-hidden /> {t.scheme.checkMine}</Link>
       </Section>
 
-      <Section id="docs" icon={<FileText className="size-4" aria-hidden />} heading={t.scheme.docs}>
+      <Section id="docs" icon={<FileText className="size-5" aria-hidden />} heading={t.scheme.docs}>
         <ul className="grid gap-2">
           {documents.map((d) => (
-            <li key={d} className="flex gap-3 rounded-xl bg-card p-3 ring-1 ring-line">
+            <li key={d} className="flex gap-3 border-b border-line py-2.5 last:border-b-0">
               <span aria-hidden className="mt-2.5 size-2 shrink-0 rounded-full bg-accent" />
               {d}
             </li>
@@ -89,12 +89,12 @@ export default async function SchemePage({ params, searchParams }: { params: Par
         </ul>
       </Section>
 
-      <Section id="how" icon={<Route className="size-4" aria-hidden />} heading={t.scheme.how}>
+      <Section id="how" icon={<Route className="size-5" aria-hidden />} heading={t.scheme.how}>
         <p>{howTo}</p>
       </Section>
 
-      <section aria-labelledby="help" className="card grid gap-4 p-5">
-        <h2 id="help" className="flex items-center gap-2 text-xl font-bold"><MapPin className="size-5 text-accent" aria-hidden /> {t.scheme.help}</h2>
+      <section aria-labelledby="help" className="grid gap-4 rounded-xl bg-paper p-5">
+        <h2 id="help" className="flex items-center gap-2 text-[1.35rem]"><MapPin className="size-5 text-accent" aria-hidden /> {t.scheme.help}</h2>
         <form className="flex flex-wrap items-center gap-2">
           <label htmlFor="district" className="sr-only">{t.scheme.chooseDistrict}</label>
           <select id="district" name="district" defaultValue={chosen ?? ""} className="input w-auto">

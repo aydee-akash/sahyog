@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { districtHi } from "@/lib/content";
 import { updateCallback } from "@/app/actions/admin";
 
-export const metadata = { title: "कॉल-बैक · एडमिन" };
+export const metadata = { title: "कॉल-बैक | एडमिन" };
 
 export default async function Callbacks({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
   const { show } = await searchParams;
@@ -17,7 +17,7 @@ export default async function Callbacks({ searchParams }: { searchParams: Promis
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="text-[1.75rem] font-bold">कॉल-बैक अनुरोध</h1>
+        <h1 className="text-[1.75rem]">कॉल-बैक अनुरोध</h1>
         <p className="text-muted">खोजक से आए अनुरोध, सबसे पुराने पहले। हर अनुरोध पर महिला की सहमति ली गई है।</p>
       </div>
       <div className="flex gap-2">
@@ -39,8 +39,8 @@ export default async function Callbacks({ searchParams }: { searchParams: Promis
                     <PhoneCall className="size-5" aria-hidden /> {c.phone.replace(/(\d{5})(\d{5})/, "$1 $2")}
                   </a>
                   <p className="text-[0.9rem] text-muted">
-                    {districtHi(c.district)} · {c.createdAt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" })}
-                    {c.handledBy && ` · ${c.handledBy}`}
+                    {districtHi(c.district)}, {c.createdAt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" })}
+                    {c.handledBy && `, ${c.handledBy}`}
                   </p>
                 </div>
               </div>

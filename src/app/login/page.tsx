@@ -2,14 +2,14 @@ import Link from "next/link";
 import { getT } from "@/lib/lang";
 import { LoginForm } from "./LoginForm";
 
-export const metadata = { title: "लॉग इन · Log in" };
+export const metadata = { title: "लॉग इन / Log in" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const [{ next }, { lang, t }] = await Promise.all([searchParams, getT()]);
   return (
     <div className="mx-auto grid max-w-sm gap-6 py-6">
       <div>
-        <h1 className="text-[2rem] font-bold">{t.login.title}</h1>
+        <h1 className="text-[2rem]">{t.login.title}</h1>
         <p className="text-muted">{t.login.lead}</p>
       </div>
       <LoginForm next={next} lang={lang} />

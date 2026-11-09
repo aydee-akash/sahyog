@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Bot, CircleHelp, ListChecks, Pencil, RotateCcw, Sparkles } from "lucide-react";
+import { ChevronLeft, CircleHelp, ListChecks, Pencil, RotateCcw } from "lucide-react";
 import { DISTRICTS } from "@/lib/content";
 import { DICTS, Lang } from "@/lib/i18n";
 import { FinderMatch, findSchemes, requestCallback, understand } from "@/app/actions/finder";
 import { AskBox } from "@/components/AskBox";
-import { ArrowIcon, CheckIcon, NeedIcon, PhoneIcon } from "@/components/icons";
+import { CheckIcon, NeedIcon, PhoneIcon } from "@/components/icons";
 import { TRUST } from "@/lib/trust";
 
 type Answers = { age?: number; marital?: string; bpl?: string; shg?: string; pregnancy?: string; district?: string };
@@ -132,7 +132,7 @@ export function Finder({ lang, initialQuery, initialVia }: { lang: Lang; initial
     return (
       <div className="mx-auto grid max-w-xl gap-6">
         <div className="grid gap-2">
-          <h1 className="text-[1.9rem] font-bold leading-tight">{t.aiTitle}</h1>
+          <h1 className="text-[2rem] leading-tight text-accent">{t.aiTitle}</h1>
           <p className="text-muted">{t.aiHint}</p>
         </div>
         <AskBox lang={lang} onAsk={ask} busy={pending} defaultValue={initialQuery} />
@@ -153,9 +153,8 @@ export function Finder({ lang, initialQuery, initialVia }: { lang: Lang; initial
     return (
       <div className="fade-up mx-auto grid max-w-xl gap-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-[1.75rem] font-bold">{t.understood}</h1>
+          <h1 className="text-[1.75rem]">{t.understood}</h1>
           <span className="ai-badge">
-            {source === "AI" ? <Sparkles className="size-3.5" aria-hidden /> : <Bot className="size-3.5" aria-hidden />}
             {source === "AI" ? t.aiBadge : t.rulesBadge}
           </span>
         </div>
@@ -185,7 +184,7 @@ export function Finder({ lang, initialQuery, initialVia }: { lang: Lang; initial
         )}
         {error && <p role="alert" className="rounded-xl bg-bad-soft p-3 text-bad">{error}</p>}
         <button onClick={() => beginQuestions(answers)} disabled={pending} className="btn-primary">
-          {pending ? t.searching : t.continue} <ArrowIcon />
+          {pending ? t.searching : t.continue}
         </button>
         <button onClick={restart} className="btn-ghost justify-self-start"><RotateCcw className="size-4" aria-hidden /> {t.restart}</button>
       </div>
@@ -207,7 +206,7 @@ export function Finder({ lang, initialQuery, initialVia }: { lang: Lang; initial
         </div>
       </div>
 
-      <h1 key={key} className="fade-up text-[1.75rem] font-bold leading-snug" id="q">{t.q[key]}</h1>
+      <h1 key={key} className="fade-up text-[1.75rem] leading-snug" id="q">{t.q[key]}</h1>
 
       {key === "age" ? (
         <form onSubmit={submitAge} className="grid gap-3" aria-labelledby="q">
@@ -227,7 +226,7 @@ export function Finder({ lang, initialQuery, initialVia }: { lang: Lang; initial
             <span className="text-lg">{t.years}</span>
           </div>
           {ageError && <p id="age-err" className="text-bad">{ageError}</p>}
-          <button className="btn-primary justify-self-start">{t.next} <ArrowIcon /></button>
+          <button className="btn-primary justify-self-start">{t.next}</button>
         </form>
       ) : (
         <div className={`grid gap-3 ${opts.length > 4 ? "grid-cols-2" : ""}`} role="group" aria-labelledby="q">
@@ -248,7 +247,7 @@ export function Finder({ lang, initialQuery, initialVia }: { lang: Lang; initial
       {error && <p role="alert" className="rounded-xl bg-bad-soft p-3 text-bad">{error}</p>}
 
       {idx > 0 && !pending && (
-        <button onClick={() => setIdx(idx - 1)} className="btn-ghost justify-self-start">{t.back}</button>
+        <button onClick={() => setIdx(idx - 1)} className="btn-ghost justify-self-start"><ChevronLeft className="size-5" aria-hidden /> {t.back}</button>
       )}
       <p className="text-[0.9rem] text-muted">{t.privacy}</p>
     </div>
@@ -260,7 +259,7 @@ function Results({ matches, district, lang, onRestart }: { matches: FinderMatch[
   return (
     <div className="fade-up mx-auto grid max-w-2xl gap-6">
       <div className="grid gap-3">
-        <h1 className="text-[1.75rem] font-bold">{matches.length ? t.resultsCount(matches.length) : t.noResults}</h1>
+        <h1 className="text-[1.75rem]">{matches.length ? t.resultsCount(matches.length) : t.noResults}</h1>
         <p className="flex gap-2 rounded-xl bg-warn-soft p-3 text-warn">
           <CircleHelp className="mt-1 size-5 shrink-0" aria-hidden /> {t.disclaimer}
         </p>
@@ -277,7 +276,7 @@ function Results({ matches, district, lang, onRestart }: { matches: FinderMatch[
                   <NeedIcon need={m.need} className="size-5" />
                 </span>
                 <div>
-                  <h2 className="text-xl font-bold">{lang === "en" ? m.titleEn : m.titleHi}</h2>
+                  <h2 className="text-xl">{lang === "en" ? m.titleEn : m.titleHi}</h2>
                   <p className="font-semibold text-accent-strong">{lang === "en" && m.benefitEn ? m.benefitEn : m.benefitHi}</p>
                 </div>
               </div>
@@ -301,7 +300,7 @@ function Results({ matches, district, lang, onRestart }: { matches: FinderMatch[
               ))}
             </ul>
             <Link href={`/schemes/${m.code}?district=${district}`} className="btn-secondary justify-self-start">
-              {t.docsHow} <ArrowIcon />
+              {t.docsHow}
             </Link>
           </li>
         ))}
@@ -340,7 +339,7 @@ function Callback({ district, codes, lang }: { district: string; codes: string[]
         });
       }}
     >
-      <h2 className="text-xl font-bold">{t.talk}</h2>
+      <h2 className="text-xl">{t.talk}</h2>
       <p className="text-muted">
         {t.talkLead}{" "}
         <a href={`tel:${TRUST.helpline.replace(/\D/g, "")}`} className="font-semibold text-accent">{TRUST.helpline}</a>
@@ -356,7 +355,7 @@ function Callback({ district, codes, lang }: { district: string; codes: string[]
         aria-invalid={!!state.error}
       />
       <label className="flex items-start gap-3">
-        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1.5 size-5 accent-[#8a3b12]" />
+        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1.5 size-5 accent-[#26346e]" />
         <span>{t.consent}</span>
       </label>
       {state.error && <p role="alert" className="text-bad">{state.error}</p>}

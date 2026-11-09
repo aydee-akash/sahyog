@@ -29,15 +29,14 @@ export default async function DonatePage({ params }: { params: Params }) {
   return (
     <div className="mx-auto grid max-w-xl gap-6">
       <div className="grid gap-3">
-        <p className="text-[0.95rem] text-muted">{t.donate.campaign}</p>
-        <h1 className="text-[2rem] font-bold leading-tight">{lang === "en" ? campaign.titleEn : campaign.titleHi}</h1>
+                <h1 className="text-[2.1rem] leading-tight">{lang === "en" ? campaign.titleEn : campaign.titleHi}</h1>
         <p className="text-muted">{pick(lang, campaign.blurbHi, campaign.blurbEn)}</p>
         <div>
           <div className="h-2.5 overflow-hidden rounded-full bg-accent-soft" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={t.home.progress}>
-            <div className="h-full rounded-full bg-gradient-to-r from-accent to-orange-600" style={{ width: `${Math.max(pct, 3)}%` }} />
+            <div className="h-full rounded-full bg-accent" style={{ width: `${Math.max(pct, 3)}%` }} />
           </div>
           <p className="mt-1.5 text-[0.9rem] text-muted">
-            <strong className="text-ink">{formatINR(raised)}</strong> {t.home.raised} · {agg._count} {t.home.donors} · {t.home.goal} {formatINR(campaign.goal)}
+            <strong className="text-ink">{formatINR(raised)}</strong> {t.home.raised}, {agg._count} {t.home.donors}. {t.home.goal} {formatINR(campaign.goal)}
           </p>
         </div>
         {others.length > 0 && (

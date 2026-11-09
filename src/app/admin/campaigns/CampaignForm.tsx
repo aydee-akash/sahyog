@@ -31,7 +31,7 @@ export function CampaignForm({ campaign }: { campaign?: C }) {
         <textarea name="blurbEn" defaultValue={campaign?.blurbEn} rows={2} className="input" />
       </label>
       <label className="flex min-h-11 items-center gap-2">
-        <input type="checkbox" name="active" defaultChecked={campaign ? campaign.active : true} className="size-5 accent-[#8a3b12]" />
+        <input type="checkbox" name="active" defaultChecked={campaign ? campaign.active : true} className="size-5 accent-[#26346e]" />
         चालू (होम पेज पर दिखे)
       </label>
       {state.error && <p role="alert" className="rounded-xl bg-bad-soft p-3 text-bad">{state.error}</p>}

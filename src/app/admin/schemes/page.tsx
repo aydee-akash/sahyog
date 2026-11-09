@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { STATUS_HI, formatDateHi, needHi } from "@/lib/content";
 
-export const metadata = { title: "योजनाएँ · एडमिन" };
+export const metadata = { title: "योजनाएँ | एडमिन" };
 
 const STATUS_STYLE: Record<string, string> = {
   DRAFT: "bg-line text-ink",
@@ -20,7 +20,7 @@ export default async function AdminSchemes() {
     <div className="grid gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[1.75rem] font-bold">योजनाएँ</h1>
+          <h1 className="text-[1.75rem]">योजनाएँ</h1>
           <p className="text-muted">केवल &ldquo;प्रकाशित&rdquo; योजनाएँ होम पेज पर दिखती हैं। हर बदलाव समीक्षा के बाद ही प्रकाशित होता है।</p>
         </div>
         <Link prefetch={false} href="/admin/schemes/new" className="btn-primary">+ नई योजना</Link>

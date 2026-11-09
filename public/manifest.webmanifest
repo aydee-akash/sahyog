@@ -4,8 +4,8 @@
   "description": "महिलाओं के लिए सरकारी योजनाएँ आसान हिंदी में",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fbf8f3",
-  "theme_color": "#8a3b12",
+  "background_color": "#ffffff",
+  "theme_color": "#26346e",
   "lang": "hi",
   "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
 }

@@ -1,5 +1,5 @@
 // Icons from lucide-react (tree-shaken SVGs, nothing extra to download on 3G).
-import { ArrowRight, Check, Flame, HandCoins, HeartPulse, Phone, Sprout, type LucideProps } from "lucide-react";
+import { Check, Flame, HandCoins, HeartPulse, Phone, Sprout, type LucideProps } from "lucide-react";
 
 const NEED_ICONS: Record<string, React.ComponentType<LucideProps>> = {
   PENSION: HandCoins,
@@ -13,9 +13,6 @@ export function NeedIcon({ need, className = "size-6" }: { need: string; classNa
   return <Icon className={className} aria-hidden strokeWidth={1.8} />;
 }
 
-export function ArrowIcon({ className = "size-5" }: { className?: string }) {
-  return <ArrowRight className={className} aria-hidden strokeWidth={2} />;
-}
 
 export function CheckIcon({ className = "size-5" }: { className?: string }) {
   return <Check className={className} aria-hidden strokeWidth={2.2} />;

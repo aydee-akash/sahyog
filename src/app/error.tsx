@@ -9,7 +9,7 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
   const t = DICTS[lang].common;
   return (
     <div role="alert" className="mx-auto grid max-w-md justify-items-start gap-4 py-12">
-      <h1 className="text-2xl font-bold">{t.error}</h1>
+      <h1 className="text-2xl">{t.error}</h1>
       <p className="text-muted">{t.errorLead}</p>
       <button onClick={reset} className="btn-primary">{t.retry}</button>
     </div>

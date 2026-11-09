@@ -9,7 +9,7 @@ import { financialYear } from "@/lib/fy";
 import { manageMandate } from "@/app/actions/account";
 import { ConfirmButton } from "@/components/ConfirmButton";
 
-export const metadata = { title: "मेरा खाता · My account" };
+export const metadata = { title: "मेरा खाता / My account" };
 
 export default async function Account() {
   const [session, { lang, t }] = await Promise.all([requireUser("/account"), getT()]);
@@ -41,7 +41,7 @@ export default async function Account() {
   return (
     <div className="grid gap-8">
       <div className="grid gap-1">
-        <h1 className="text-[2rem] font-bold">{a.hello(session.name.split(" ")[0])}</h1>
+        <h1 className="text-[2rem]">{a.hello(session.name.split(" ")[0])}</h1>
         <p className="text-muted">{a.lead}</p>
       </div>
 
@@ -61,13 +61,13 @@ export default async function Account() {
 
       {mandates.length > 0 && (
         <section className="grid gap-3" aria-labelledby="mandates">
-          <h2 id="mandates" className="flex items-center gap-2 text-xl font-bold"><CalendarClock className="size-5 text-accent" aria-hidden /> {a.mandates}</h2>
+          <h2 id="mandates" className="flex items-center gap-2 text-xl"><CalendarClock className="size-5 text-accent" aria-hidden /> {a.mandates}</h2>
           <ul className="grid gap-3">
             {mandates.map((m) => (
               <li key={m.id} className="card flex flex-wrap items-center justify-between gap-3 p-4">
                 <div>
                   <p className="font-semibold">
-                    {formatINR(m.amount)}{t.donate.perMonth} · {lang === "en" ? m.campaign.titleEn : m.campaign.titleHi}
+                    {formatINR(m.amount)}{t.donate.perMonth}, {lang === "en" ? m.campaign.titleEn : m.campaign.titleHi}
                     <span className={`badge ml-2 ${statusStyle[m.mandateStatus!]}`}>{statusLabel[m.mandateStatus!]}</span>
                   </p>
                   {m.mandateStatus === "ACTIVE" && m.nextChargeAt && (
@@ -94,7 +94,7 @@ export default async function Account() {
       )}
 
       <section className="grid gap-3" aria-labelledby="hist">
-        <h2 id="hist" className="flex items-center gap-2 text-xl font-bold"><Receipt className="size-5 text-accent" aria-hidden /> {a.history}</h2>
+        <h2 id="hist" className="flex items-center gap-2 text-xl"><Receipt className="size-5 text-accent" aria-hidden /> {a.history}</h2>
         {donations.length === 0 ? (
           <div className="card grid justify-items-start gap-3 p-6">
             <HandHeart className="size-8 text-accent" aria-hidden />
@@ -110,11 +110,11 @@ export default async function Account() {
                   <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
                     <div>
                       <p className="font-semibold">
-                        {formatINR(d.amount)} · {lang === "en" ? d.campaign.titleEn : d.campaign.titleHi}
+                        {formatINR(d.amount)}, {lang === "en" ? d.campaign.titleEn : d.campaign.titleHi}
                         {d.frequency === "MONTHLY" && <span className="badge ml-2 bg-accent-soft text-accent-strong">{a.monthlyBadge}</span>}
                         {d.receipt?.cancelledAt && <span className="badge ml-2 bg-bad-soft text-bad">{a.cancelled}</span>}
                       </p>
-                      <p className="text-[0.9rem] text-muted">{formatDate(d.createdAt, lang)} · {d.receipt?.number}</p>
+                      <p className="text-[0.9rem] text-muted">{formatDate(d.createdAt, lang)}<br />{d.receipt?.number}</p>
                     </div>
                     {d.receipt && (
                       <a href={`/api/receipts/${d.id}`} target="_blank" rel="noopener" className="btn-secondary min-h-11">
