@@ -1,7 +1,7 @@
 # Technical Design Document: Sahyog
 
 **GitHub:** https://github.com/aydee-akash/sahyog  
-**Live app:** _added after deploy_  
+**Live app:** https://sahyog-orpin.vercel.app  
 **Brief:** NGO's donation platform with a women's schemes finder on the home page (Company A, Bhopal)  
 **Author:** Akash Deep
 

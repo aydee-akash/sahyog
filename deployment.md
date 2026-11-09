@@ -1,7 +1,7 @@
 # deployment.md: Sahyog
 
 **Repository:** https://github.com/aydee-akash/sahyog  
-**Live app:** _added after deploy_
+**Live app:** https://sahyog-orpin.vercel.app
 
 ## Demo logins
 
