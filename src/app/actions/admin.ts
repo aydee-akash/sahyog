@@ -6,6 +6,8 @@ import { z } from "zod";
 import type { SchemeStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { getLang } from "@/lib/lang";
+import { DICTS } from "@/lib/i18n";
 import { draftHindiSummary, DraftResult } from "@/lib/ai";
 import { canTransition, missingForReview } from "@/lib/workflow";
 import { DISTRICTS, NEEDS } from "@/lib/content";
@@ -47,6 +49,11 @@ const contentSchema = z.object({
   aiDrafted: z.boolean(),
 });
 
+async function adminText() {
+  const lang = await getLang();
+  return { lang, ...DICTS[lang].admin };
+}
+
 async function audit(actor: string, action: string, entityId: string, detail = "") {
   await prisma.auditLog.create({ data: { actor, action, entity: "Scheme", entityId, detail } });
 }
@@ -61,7 +68,7 @@ export async function saveScheme(id: string, input: unknown): Promise<SaveResult
     return { ok: false, error: `${i.path.join(".")}: ${i.message}` };
   }
   const existing = await prisma.scheme.findUnique({ where: { id } });
-  if (!existing) return { ok: false, error: "योजना नहीं मिली" };
+  if (!existing) return { ok: false, error: (await adminText()).err.schemeNotFound };
   // Any edit sends the scheme back to draft so it is reviewed again.
   await prisma.scheme.update({
     where: { id },
@@ -76,21 +83,23 @@ export async function saveScheme(id: string, input: unknown): Promise<SaveResult
 
 export async function generateDraft(id: string): Promise<DraftResult> {
   const admin = await requireAdmin();
+  const { lang, err } = await adminText();
   const s = await prisma.scheme.findUnique({ where: { id } });
-  if (!s) return { ok: false, error: "योजना नहीं मिली" };
-  const res = await draftHindiSummary(s.titleEn, s.noticeText);
+  if (!s) return { ok: false, error: err.schemeNotFound };
+  const res = await draftHindiSummary(s.titleEn, s.noticeText, lang);
   await audit(admin.email, res.ok ? "ai_draft" : "ai_draft_failed", id, res.ok ? "" : res.error);
   return res;
 }
 
 export async function transitionScheme(id: string, to: SchemeStatus): Promise<SaveResult> {
   const admin = await requireAdmin();
+  const { err, missing: fieldLabel } = await adminText();
   const s = await prisma.scheme.findUnique({ where: { id } });
-  if (!s) return { ok: false, error: "योजना नहीं मिली" };
-  if (!canTransition(s.status, to)) return { ok: false, error: "यह बदलाव संभव नहीं है" };
+  if (!s) return { ok: false, error: err.schemeNotFound };
+  if (!canTransition(s.status, to)) return { ok: false, error: err.badTransition };
   if (to === "IN_REVIEW") {
     const missing = missingForReview(s);
-    if (missing.length) return { ok: false, error: `पहले भरें: ${missing.join(", ")}` };
+    if (missing.length) return { ok: false, error: err.fillFirst(missing.map((m) => fieldLabel[m]).join(", ")) };
   }
   await prisma.scheme.update({
     where: { id },
@@ -104,20 +113,24 @@ export async function transitionScheme(id: string, to: SchemeStatus): Promise<Sa
   return { ok: true };
 }
 
-const newSchema = z.object({
-  code: z.string().trim().regex(/^SCH-\d{3}$/, "कोड SCH-123 जैसा हो"),
-  titleHi: z.string().trim().min(2).max(120),
-  titleEn: z.string().trim().min(2).max(120),
-  need: z.enum(needKeys),
-  sourceUrl: z.string().trim().url("सही URL लिखें"),
-  noticeText: z.string().trim().min(20, "आधिकारिक सूचना का पाठ चिपकाएँ").max(10_000),
-});
+type AdminErr = (typeof DICTS)["hi"]["admin"]["err"];
+
+const newSchema = (err: AdminErr) =>
+  z.object({
+    code: z.string().trim().regex(/^SCH-\d{3}$/, err.code),
+    titleHi: z.string().trim().min(2).max(120),
+    titleEn: z.string().trim().min(2).max(120),
+    need: z.enum(needKeys),
+    sourceUrl: z.string().trim().url(err.url),
+    noticeText: z.string().trim().min(20, err.notice).max(10_000),
+  });
 
 export async function createScheme(_: { error?: string }, form: FormData): Promise<{ error?: string }> {
   const admin = await requireAdmin();
-  const parsed = newSchema.safeParse(Object.fromEntries(form));
+  const { err } = await adminText();
+  const parsed = newSchema(err).safeParse(Object.fromEntries(form));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  if (await prisma.scheme.findUnique({ where: { code: parsed.data.code } })) return { error: "यह कोड पहले से है" };
+  if (await prisma.scheme.findUnique({ where: { code: parsed.data.code } })) return { error: err.codeTaken };
   const s = await prisma.scheme.create({
     data: { ...parsed.data, districts: [], documentsHi: [], rules: {}, lastChecked: new Date() },
   });
@@ -145,24 +158,26 @@ export async function updateCallback(form: FormData) {
 
 // --- Campaigns -------------------------------------------------------------
 
-const campaignSchema = z.object({
-  id: z.string().optional(),
-  slug: z.string().trim().regex(/^[a-z0-9-]{3,40}$/, "slug: छोटे अक्षर, अंक और - (3–40)"),
-  titleHi: z.string().trim().min(2).max(80),
-  titleEn: z.string().trim().min(2).max(80),
-  blurbHi: z.string().trim().min(10).max(300),
-  blurbEn: z.string().trim().max(300).default(""),
-  goal: z.coerce.number().int().min(10_000).max(1_000_000_000),
-  active: z.enum(["on"]).optional(),
-});
+const campaignSchema = (err: AdminErr) =>
+  z.object({
+    id: z.string().optional(),
+    slug: z.string().trim().regex(/^[a-z0-9-]{3,40}$/, err.slug),
+    titleHi: z.string().trim().min(2).max(80),
+    titleEn: z.string().trim().min(2).max(80),
+    blurbHi: z.string().trim().min(10).max(300),
+    blurbEn: z.string().trim().max(300).default(""),
+    goal: z.coerce.number().int().min(10_000).max(1_000_000_000),
+    active: z.enum(["on"]).optional(),
+  });
 
 export async function saveCampaign(_: { error?: string; ok?: boolean }, form: FormData): Promise<{ error?: string; ok?: boolean }> {
   const admin = await requireAdmin();
-  const parsed = campaignSchema.safeParse(Object.fromEntries(form));
+  const { err } = await adminText();
+  const parsed = campaignSchema(err).safeParse(Object.fromEntries(form));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { id, active, ...data } = parsed.data;
   const clash = await prisma.campaign.findUnique({ where: { slug: data.slug } });
-  if (clash && clash.id !== id) return { error: "यह slug पहले से है" };
+  if (clash && clash.id !== id) return { error: err.slugTaken };
   const c = id
     ? await prisma.campaign.update({ where: { id }, data: { ...data, active: !!active } })
     : await prisma.campaign.create({ data: { ...data, active: !!active } });
@@ -177,12 +192,13 @@ export async function saveCampaign(_: { error?: string; ok?: boolean }, form: Fo
 
 export async function cancelReceiptAction(_: { error?: string; ok?: boolean }, form: FormData): Promise<{ error?: string; ok?: boolean }> {
   const admin = await requireAdmin();
-  const parsed = z.object({ receiptId: z.string().min(1), reason: z.string().trim().min(5, "कारण लिखें (कम से कम 5 अक्षर)").max(300) }).safeParse(Object.fromEntries(form));
+  const { err } = await adminText();
+  const parsed = z.object({ receiptId: z.string().min(1), reason: z.string().trim().min(5, err.reason).max(300) }).safeParse(Object.fromEntries(form));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   try {
     await cancelReceipt(parsed.data.receiptId, parsed.data.reason, admin.email);
   } catch (e) {
-    if (e instanceof NotPayableError) return { error: "रसीद पहले से रद्द है" };
+    if (e instanceof NotPayableError) return { error: err.alreadyCancelled };
     throw e;
   }
   await prisma.auditLog.create({ data: { actor: admin.email, action: "receipt_cancel", entity: "Receipt", entityId: parsed.data.receiptId, detail: parsed.data.reason } });

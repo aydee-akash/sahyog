@@ -1,25 +1,32 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import type { Rules } from "@/lib/eligibility";
+import { getT } from "@/lib/lang";
 import { Editor } from "./Editor";
 
-export const metadata = { title: "योजना संपादित करें | एडमिन" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t.admin.meta.editScheme };
+}
 
 export default async function EditScheme({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const [s, log] = await Promise.all([
+  const [s, log, { lang, t }] = await Promise.all([
     prisma.scheme.findUnique({ where: { id } }),
     prisma.auditLog.findMany({ where: { entityId: id }, orderBy: { createdAt: "desc" }, take: 8 }),
+    getT(),
   ]);
   if (!s) notFound();
 
   return (
     <div className="grid gap-6">
-      <Link prefetch={false} href="/admin/schemes" className="text-accent">← सभी योजनाएँ</Link>
+      <Link prefetch={false} href="/admin/schemes" className="text-accent">{t.admin.editor.back}</Link>
       <Editor
+        lang={lang}
         scheme={{
           id: s.id,
           code: s.code,

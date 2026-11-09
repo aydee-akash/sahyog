@@ -21,20 +21,8 @@ export const DISTRICTS = [
   { key: "DEWAS", hi: "देवास", en: "Dewas" },
 ] as const;
 
-export const needHi = (k: string) => NEEDS.find((n) => n.key === k)?.hi ?? k;
-export const districtHi = (k: string) => DISTRICTS.find((d) => d.key === k)?.hi ?? k;
 export const needLabel = (k: string, lang: Lang) => NEEDS.find((n) => n.key === k)?.[lang] ?? k;
 export const districtLabel = (k: string, lang: Lang) => DISTRICTS.find((d) => d.key === k)?.[lang] ?? k;
-
-export const STATUS_HI: Record<string, string> = {
-  DRAFT: "ड्राफ़्ट",
-  IN_REVIEW: "समीक्षा में",
-  PUBLISHED: "प्रकाशित",
-};
-
-export function formatDateHi(d: Date): string {
-  return d.toLocaleDateString("hi-IN", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata" });
-}
 
 export function formatDate(d: Date, lang: Lang): string {
   return d.toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata" });

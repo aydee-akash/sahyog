@@ -3,6 +3,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { parseQuestion, PartialAnswers } from "./questionParser";
 import { DISTRICTS } from "./content";
+import type { Lang } from "./i18n";
 
 // Structured outputs (output_config.format) return schema-valid JSON. Haiku 5.5
 // is the cheapest current model and these are short extraction/drafting jobs.
@@ -59,9 +60,27 @@ Rules:
 - No promises: say "मिल सकता है", not "मिलेगा".
 - Also give the same content in plain English (the *En fields), equally faithful to the notice.`;
 
-export async function draftHindiSummary(titleEn: string, noticeText: string): Promise<DraftResult> {
+const DRAFT_ERRORS = {
+  hi: {
+    noKey: "AI सेवा सेट नहीं है (ANTHROPIC_API_KEY नहीं मिला)। सारांश स्वयं लिखें।",
+    refusal: "AI ने यह ड्राफ़्ट नहीं बनाया। सारांश स्वयं लिखें।",
+    maxTokens: "AI का ड्राफ़्ट अधूरा रह गया। दोबारा कोशिश करें।",
+    invalid: "AI का ड्राफ़्ट अधूरा था। दोबारा कोशिश करें या स्वयं लिखें।",
+    unavailable: "AI सेवा अभी उपलब्ध नहीं है। थोड़ी देर बाद कोशिश करें या स्वयं लिखें।",
+  },
+  en: {
+    noKey: "The AI service isn't set up (ANTHROPIC_API_KEY is missing). Write the summary yourself.",
+    refusal: "The AI didn't write this draft. Write the summary yourself.",
+    maxTokens: "The AI draft was cut off. Please try again.",
+    invalid: "The AI draft was incomplete. Try again or write it yourself.",
+    unavailable: "The AI service isn't available right now. Try again shortly or write it yourself.",
+  },
+};
+
+export async function draftHindiSummary(titleEn: string, noticeText: string, lang: Lang = "hi"): Promise<DraftResult> {
+  const err = DRAFT_ERRORS[lang];
   if (!process.env.ANTHROPIC_API_KEY) {
-    return { ok: false, error: "AI सेवा सेट नहीं है (ANTHROPIC_API_KEY नहीं मिला)। सारांश स्वयं लिखें।" };
+    return { ok: false, error: err.noKey };
   }
   try {
     const res = await client(90_000).messages.parse({
@@ -71,14 +90,14 @@ export async function draftHindiSummary(titleEn: string, noticeText: string): Pr
       system: DRAFT_SYSTEM,
       messages: [{ role: "user", content: `Scheme: ${titleEn}\n\nOfficial notice:\n"""\n${noticeText}\n"""` }],
     });
-    if (res.stop_reason === "refusal") return { ok: false, error: "AI ने यह ड्राफ़्ट नहीं बनाया। सारांश स्वयं लिखें।" };
-    if (res.stop_reason === "max_tokens") return { ok: false, error: "AI का ड्राफ़्ट अधूरा रह गया। दोबारा कोशिश करें।" };
+    if (res.stop_reason === "refusal") return { ok: false, error: err.refusal };
+    if (res.stop_reason === "max_tokens") return { ok: false, error: err.maxTokens };
     const parsed = draftSchema.safeParse(res.parsed_output);
-    if (!parsed.success) return { ok: false, error: "AI का ड्राफ़्ट अधूरा था। दोबारा कोशिश करें या स्वयं लिखें।" };
+    if (!parsed.success) return { ok: false, error: err.invalid };
     return { ok: true, draft: parsed.data };
   } catch (e) {
     console.error("AI draft failed", e instanceof Anthropic.APIError ? `${e.status} ${e.message}` : e);
-    return { ok: false, error: "AI सेवा अभी उपलब्ध नहीं है। थोड़ी देर बाद कोशिश करें या स्वयं लिखें।" };
+    return { ok: false, error: err.unavailable };
   }
 }
 

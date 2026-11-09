@@ -1,16 +1,24 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { BookOpenText, CalendarClock, HandCoins, PhoneCall, ReceiptIndianRupee, Search, Users } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { financialYear } from "@/lib/fy";
 import { formatINR } from "@/lib/money";
+import { getT } from "@/lib/lang";
 import { RunMonthly } from "./RunMonthly";
 
-export const metadata = { title: "डैशबोर्ड | एडमिन" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t.admin.meta.dashboard };
+}
+
 export const dynamic = "force-dynamic";
 
 const DAY = 86_400_000;
 
 export default async function Dashboard() {
+  const { lang, t } = await getT();
+  const a = t.admin.dash;
   const now = new Date();
   const fy = financialYear(now);
   const since14 = new Date(now.getTime() - 13 * DAY);
@@ -33,7 +41,7 @@ export default async function Dashboard() {
   const fyTotal = fyAgg.reduce((s, r) => s + r.donation.amount, 0);
   const days = Array.from({ length: 14 }, (_, i) => {
     const d = new Date(since14.getTime() + i * DAY);
-    return { key: d.toISOString().slice(0, 10), label: d.toLocaleDateString("hi-IN", { day: "numeric", month: "short" }), total: 0, count: 0 };
+    return { key: d.toISOString().slice(0, 10), label: d.toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { day: "numeric", month: "short" }), total: 0, count: 0 };
   });
   for (const r of recent) {
     const k = r.createdAt.toISOString().slice(0, 10);
@@ -44,22 +52,21 @@ export default async function Dashboard() {
     }
   }
   const max = Math.max(1, ...days.map((d) => d.total));
-  const viaLabel: Record<string, string> = { QUESTIONS: "सवालों से", AI_TEXT: "AI (लिखकर)", VOICE: "AI (बोलकर)" };
 
   const kpis = [
-    { label: `इस वित्त वर्ष (${fy})`, value: formatINR(fyTotal), sub: `${fyAgg.length} रसीदें`, Icon: ReceiptIndianRupee, href: "/admin/donations" },
-    { label: "दानदाता (PAN)", value: String(donorsFy.length), sub: "इस वित्त वर्ष", Icon: Users, href: "/admin/donations" },
-    { label: "चालू मासिक दान", value: String(activeMandates._count), sub: `${formatINR(activeMandates._sum.amount ?? 0)} / महीना`, Icon: CalendarClock, href: "/admin/donations" },
-    { label: "खोजक उपयोग (30 दिन)", value: String(finder), sub: "लक्ष्य: साल में 50,000", Icon: Search, href: "/admin" },
-    { label: "बाकी कॉल-बैक", value: String(openCallbacks), sub: "हेल्पलाइन टीम के लिए", Icon: PhoneCall, href: "/admin/callbacks" },
-    { label: "समीक्षा में योजनाएँ", value: String(inReview), sub: "स्वीकृति बाकी", Icon: BookOpenText, href: "/admin/schemes" },
+    { label: a.fy(fy), value: formatINR(fyTotal), sub: a.receipts(fyAgg.length), Icon: ReceiptIndianRupee, href: "/admin/donations" },
+    { label: a.donors, value: String(donorsFy.length), sub: a.thisFy, Icon: Users, href: "/admin/donations" },
+    { label: a.mandates, value: String(activeMandates._count), sub: a.perMonth(formatINR(activeMandates._sum.amount ?? 0)), Icon: CalendarClock, href: "/admin/donations" },
+    { label: a.finder, value: String(finder), sub: a.finderGoal, Icon: Search, href: "/admin" },
+    { label: a.callbacks, value: String(openCallbacks), sub: a.callbacksSub, Icon: PhoneCall, href: "/admin/callbacks" },
+    { label: a.review, value: String(inReview), sub: a.reviewSub, Icon: BookOpenText, href: "/admin/schemes" },
   ];
 
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="text-[1.75rem]">डैशबोर्ड</h1>
-        <p className="text-muted">हर रसीद, 80G प्रमाण पत्र और रिमाइंडर अपने-आप बनता है।</p>
+        <h1 className="text-[1.75rem]">{a.title}</h1>
+        <p className="text-muted">{a.lead}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
@@ -74,10 +81,10 @@ export default async function Dashboard() {
 
       <section className="card grid gap-4 p-5" aria-labelledby="chart-h">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="chart-h" className="text-lg">पिछले 14 दिन का दान</h2>
-          <span className="text-[0.9rem] text-muted">{formatINR(days.reduce((s, d) => s + d.total, 0))}, {days.reduce((s, d) => s + d.count, 0)} दान</span>
+          <h2 id="chart-h" className="text-lg">{a.chart}</h2>
+          <span className="text-[0.9rem] text-muted">{a.chartSum(formatINR(days.reduce((s, d) => s + d.total, 0)), days.reduce((s, d) => s + d.count, 0))}</span>
         </div>
-        <div className="flex h-44 items-end gap-1.5" role="img" aria-label="पिछले 14 दिन के दान का बार चार्ट">
+        <div className="flex h-44 items-end gap-1.5" role="img" aria-label={a.chartAria}>
           {days.map((d) => (
             <div key={d.key} className="group relative flex h-full flex-1 flex-col justify-end">
               <div
@@ -97,22 +104,20 @@ export default async function Dashboard() {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <section className="card grid content-start gap-3 p-5" aria-labelledby="monthly-h">
-          <h2 id="monthly-h" className="flex items-center gap-2 text-lg"><HandCoins className="size-5 text-accent" aria-hidden /> मासिक दान चलाएँ (टेस्ट)</h2>
-          <p className="text-muted">
-            असली सिस्टम में यह रोज़ अपने-आप चलता है। अभी {dueMandates} मासिक दान की किस्त बाकी है। हर किस्त की नई रसीद और ईमेल बनेगा; दोबारा चलाने पर दोहरा चार्ज नहीं होगा।
-          </p>
-          <RunMonthly due={dueMandates} />
+          <h2 id="monthly-h" className="flex items-center gap-2 text-lg"><HandCoins className="size-5 text-accent" aria-hidden /> {a.monthly}</h2>
+          <p className="text-muted">{a.monthlyLead(dueMandates)}</p>
+          <RunMonthly lang={lang} due={dueMandates} />
         </section>
 
         <section className="card grid content-start gap-3 p-5" aria-labelledby="finder-h">
-          <h2 id="finder-h" className="flex items-center gap-2 text-lg"><Search className="size-5 text-accent" aria-hidden /> खोजक कैसे इस्तेमाल हुआ (30 दिन)</h2>
+          <h2 id="finder-h" className="flex items-center gap-2 text-lg"><Search className="size-5 text-accent" aria-hidden /> {a.finderHow}</h2>
           {finderVia.length === 0 ? (
-            <p className="text-muted">अभी कोई उपयोग नहीं।</p>
+            <p className="text-muted">{a.noUse}</p>
           ) : (
             <ul className="grid gap-2">
               {finderVia.map((v) => (
                 <li key={v.via} className="grid gap-1">
-                  <span className="flex justify-between text-[0.95rem]"><span>{viaLabel[v.via] ?? v.via}</span><strong>{v._count}</strong></span>
+                  <span className="flex justify-between text-[0.95rem]"><span>{a.via[v.via] ?? v.via}</span><strong>{v._count}</strong></span>
                   <span className="h-2 overflow-hidden rounded-full bg-paper ring-1 ring-line">
                     <span className="block h-full rounded-full bg-haldi" style={{ width: `${(v._count / finder) * 100}%` }} />
                   </span>
@@ -120,12 +125,12 @@ export default async function Dashboard() {
               ))}
             </ul>
           )}
-          <p className="text-[0.85rem] text-muted">केवल गिनती रखी जाती है, महिलाओं के जवाब नहीं।</p>
+          <p className="text-[0.85rem] text-muted">{a.privacy}</p>
         </section>
       </div>
 
       <section className="grid gap-2" aria-labelledby="log-h">
-        <h2 id="log-h" className="text-lg">हाल की गतिविधि</h2>
+        <h2 id="log-h" className="text-lg">{a.activity}</h2>
         <ul className="card divide-y divide-line text-[0.9rem]">
           {log.map((l) => (
             <li key={l.id} className="flex flex-wrap justify-between gap-2 px-4 py-2.5">

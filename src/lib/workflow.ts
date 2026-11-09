@@ -13,12 +13,14 @@ export function canTransition(from: SchemeStatus, to: SchemeStatus): boolean {
 
 type Content = { summaryHi: string; benefitHi: string; eligibilityHi: string; howToApplyHi: string; documentsHi: string[] };
 
-export function missingForReview(s: Content): string[] {
-  const missing: string[] = [];
-  if (!s.summaryHi.trim()) missing.push("सारांश");
-  if (!s.benefitHi.trim()) missing.push("लाभ");
-  if (!s.eligibilityHi.trim()) missing.push("कौन आवेदन कर सकती है");
-  if (!s.howToApplyHi.trim()) missing.push("आवेदन कैसे करें");
-  if (s.documentsHi.length === 0) missing.push("ज़रूरी कागज़");
+export type MissingField = "summary" | "benefit" | "eligibility" | "howToApply" | "documents";
+
+export function missingForReview(s: Content): MissingField[] {
+  const missing: MissingField[] = [];
+  if (!s.summaryHi.trim()) missing.push("summary");
+  if (!s.benefitHi.trim()) missing.push("benefit");
+  if (!s.eligibilityHi.trim()) missing.push("eligibility");
+  if (!s.howToApplyHi.trim()) missing.push("howToApply");
+  if (s.documentsHi.length === 0) missing.push("documents");
   return missing;
 }
